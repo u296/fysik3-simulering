@@ -14,12 +14,12 @@ pub fn uppgift_c() {
         for mass in values {
             let init_snapshot = FreeFallObjectSnapshot {
                 mass,
-                ..BALL_SNAPSHOT
+                ..*BALL_SNAPSHOT
             };
 
             let mut output_file =
                 File::create(&format!("uppgifter/1/c/mass/mass-{mass}.csv")).unwrap();
-            run_simulation(init_snapshot, BALL_AIR_RESISTANCE, dt, &mut output_file);
+            run_simulation(init_snapshot, *BALL_AIR_RESISTANCE, dt, &mut output_file);
         }
     }
 
@@ -31,14 +31,14 @@ pub fn uppgift_c() {
         for initial_y in values {
             let init_snapshot = FreeFallObjectSnapshot {
                 position: vector![0.0, initial_y],
-                ..BALL_SNAPSHOT
+                ..*BALL_SNAPSHOT
             };
 
             let mut output_file = File::create(&format!(
                 "uppgifter/1/c/initial-y/initial-y-{initial_y}.csv"
             ))
             .unwrap();
-            run_simulation(init_snapshot, BALL_AIR_RESISTANCE, dt, &mut output_file);
+            run_simulation(init_snapshot, *BALL_AIR_RESISTANCE, dt, &mut output_file);
         }
     }
 
@@ -50,14 +50,14 @@ pub fn uppgift_c() {
         for initial_velocity in values {
             let init_snapshot = FreeFallObjectSnapshot {
                 velocity: vector![default_alpha.cos(), default_alpha.sin()] * initial_velocity,
-                ..BALL_SNAPSHOT
+                ..*BALL_SNAPSHOT
             };
 
             let mut output_file = File::create(&format!(
                 "uppgifter/1/c/initial-velocity/initial-velocity-{initial_velocity}.csv"
             ))
             .unwrap();
-            run_simulation(init_snapshot, BALL_AIR_RESISTANCE, dt, &mut output_file);
+            run_simulation(init_snapshot, *BALL_AIR_RESISTANCE, dt, &mut output_file);
         }
     }
 

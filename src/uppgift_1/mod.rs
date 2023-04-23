@@ -1,6 +1,6 @@
+use std::fs;
 use std::io::{ErrorKind, Write};
-use std::{default, fs};
-use std::{fs::File, path::Path};
+use std::path::Path;
 
 use fysik3_simulering::{Float, FreeFallObject, FreeFallObjectSnapshot, PhysicsSystem};
 use lazy_static::lazy_static;
@@ -9,8 +9,10 @@ use nalgebra::{vector, Vector2};
 use crate::vector_len;
 
 mod prelude {
-    pub use super::{ensure_dir_exists, run_simulation, AirResistanceParameters};
-    pub use fysik3_simulering::{Float, FreeFallObject, FreeFallObjectSnapshot, PhysicsSystem};
+    pub use super::{run_simulation, AirResistanceParameters};
+    pub use fysik3_simulering::{
+        ensure_dir_exists, Float, FreeFallObject, FreeFallObjectSnapshot, PhysicsSystem,
+    };
     pub use nalgebra::{vector, Vector2};
     pub use std::{fs::File, io::Write, path::Path};
 }
@@ -20,10 +22,14 @@ mod del_c;
 mod del_d;
 mod del_e;
 mod del_f;
+mod del_g;
+
 lazy_static! {
     static ref BALL_SNAPSHOT: FreeFallObjectSnapshot = FreeFallObjectSnapshot {
         mass: 0.4,
         charge: 0.0,
+        frontal_area: 0.01 * std::f64::consts::PI,
+        volume: 0.0,
         position: vector![0.0, 0.0],
         velocity: vector![
             35.0f64.to_radians().cos() * 40.0,
@@ -35,7 +41,6 @@ lazy_static! {
 static ref BALL_AIR_RESISTANCE: AirResistanceParameters = AirResistanceParameters {
     c_d: 0.47,
     rho: 1.2,
-    area: 0.01 * std::f64::consts::PI,
 };
 
 /*
@@ -59,6 +64,8 @@ anger följande information om flygplanet:
 
 static ref AIRCRAFT_SNAPSHOT: FreeFallObjectSnapshot = FreeFallObjectSnapshot {
     mass: 347450.0,
+    frontal_area: 245.5,
+    volume: 0.0,
     charge: 0.0,
     position: vector![0.0, 10.0],
     velocity: vector![
@@ -70,7 +77,6 @@ static ref AIRCRAFT_SNAPSHOT: FreeFallObjectSnapshot = FreeFallObjectSnapshot {
 static ref AIRCRAFT_RESISTANCE: AirResistanceParameters = AirResistanceParameters {
     c_d: 0.025,
     rho: 1.2,
-    area: 245.5,
 };
 }
 
@@ -79,17 +85,7 @@ fn gravity_force(o: &FreeFallObjectSnapshot, g: Float) -> Vector2<Float> {
 }
 
 fn air_drag_force(o: &FreeFallObjectSnapshot, params: AirResistanceParameters) -> Vector2<Float> {
-    0.5 * params.c_d * params.rho * params.area * -1.0 * o.velocity * vector_len(o.velocity)
-}
-
-pub fn ensure_dir_exists(p: impl AsRef<Path>) {
-    match fs::create_dir_all(p) {
-        Err(e) => match e.kind() {
-            ErrorKind::AlreadyExists => (),
-            _ => panic!("failed to create dir: {e}"),
-        },
-        _ => (),
-    }
+    0.5 * params.c_d * params.rho * o.frontal_area * -1.0 * o.velocity * vector_len(o.velocity)
 }
 
 pub fn uppgift_1() {
@@ -98,12 +94,12 @@ pub fn uppgift_1() {
     del_d::uppgift_d();
     del_e::uppgift_e();
     del_f::uppgift_f();
+    del_g::uppgift_g();
 }
 
 #[derive(Clone, Copy)]
 pub struct AirResistanceParameters {
     c_d: Float,
-    area: Float,
     rho: Float,
 }
 

@@ -7,6 +7,11 @@ pub fn uppgift_e() {
 
     for dt in vals {
         let mut output_file = File::create(&format!("uppgifter/1/e/dt-{dt}.csv")).unwrap();
-        run_simulation(AIRCRAFT_SNAPSHOT, AIRCRAFT_RESISTANCE, dt, &mut output_file)
+        run_simulation(
+            *AIRCRAFT_SNAPSHOT,
+            *AIRCRAFT_RESISTANCE,
+            dt,
+            &mut output_file,
+        )
     }
 }
