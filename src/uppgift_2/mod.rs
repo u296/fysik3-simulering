@@ -16,6 +16,9 @@ mod prelude {
 }
 
 mod del_a;
+mod del_b;
+mod del_c;
+
 const ACCELERATION_STOP_THRESHHOLD: Float = 0.001;
 const DEFAULT_BALL_RADIUS: Float = 0.005;
 
@@ -47,6 +50,8 @@ fn dampening_force(object: &FreeFallObjectSnapshot, r: Float) -> Vector2<Float> 
 
 pub fn uppgift_2() {
     del_a::uppgift_a();
+    del_b::uppgift_b();
+    del_c::uppgift_c();
 }
 
 pub fn run_simulation(
@@ -82,6 +87,11 @@ pub fn run_simulation(
         if vector_len(object.step_forward(dt).acceleration) < ACCELERATION_STOP_THRESHHOLD {
             break;
         }
+
+        /*if t > 100.0 {
+            break;
+        }*/
+
         t += dt;
     }
 }
