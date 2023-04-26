@@ -61,7 +61,7 @@ pub async fn ensure_dir_exists(p: impl AsRef<Path>) {
     }
 }
 
-pub async fn spawn_timed_task<
+pub fn spawn_timed_task<
     T: Send + Sync + 'static,
     F: Future<Output = T> + Send + 'static,
     FN: Send + FnOnce() -> F + 'static,

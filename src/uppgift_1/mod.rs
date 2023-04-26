@@ -9,7 +9,7 @@ use fysik3_simulering::{Float, FreeFallObject, FreeFallObjectSnapshot, PhysicsSy
 use lazy_static::lazy_static;
 use nalgebra::{vector, Vector2};
 use tokio::join;
-use tokio::task::JoinHandle;
+use tokio::task::{JoinError, JoinHandle};
 
 use crate::vector_len;
 
@@ -97,14 +97,21 @@ fn air_drag_force(o: &FreeFallObjectSnapshot, params: AirResistanceParameters) -
 }
 
 pub async fn uppgift_1() {
-    join!(
+    let (b, c, d, e, f, g) = join!(
         spawn_timed_task("1-b", del_b::uppgift_b),
-        spawn_timed_task("1-c", del_d::uppgift_d),
-        spawn_timed_task("1-d", del_c::uppgift_c),
+        spawn_timed_task("1-c", del_c::uppgift_c),
+        spawn_timed_task("1-d", del_d::uppgift_d),
         spawn_timed_task("1-e", del_e::uppgift_e),
         spawn_timed_task("1-f", del_f::uppgift_f),
         spawn_timed_task("1-g", del_g::uppgift_g)
     );
+
+    b.unwrap();
+    c.unwrap();
+    d.unwrap();
+    e.unwrap();
+    f.unwrap();
+    g.unwrap();
 }
 
 #[derive(Clone, Copy)]
