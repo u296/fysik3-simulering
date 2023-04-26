@@ -1,15 +1,9 @@
-use std::fs;
-use std::future::Future;
-use std::io::{ErrorKind, Write};
-use std::path::Path;
-use std::time::Instant;
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncWriteExt, BufWriter};
 
 use fysik3_simulering::{Float, FreeFallObject, FreeFallObjectSnapshot, PhysicsSystem};
 use lazy_static::lazy_static;
 use nalgebra::{vector, Vector2};
 use tokio::join;
-use tokio::task::{JoinError, JoinHandle};
 
 use crate::vector_len;
 
@@ -31,6 +25,8 @@ mod del_d;
 mod del_e;
 mod del_f;
 mod del_g;
+
+const NUM_DATAPOINTS: usize = 2000;
 
 lazy_static! {
     static ref BALL_SNAPSHOT: FreeFallObjectSnapshot = FreeFallObjectSnapshot {
@@ -106,12 +102,7 @@ pub async fn uppgift_1() {
         spawn_timed_task("1-g", del_g::uppgift_g)
     );
 
-    b.unwrap();
-    c.unwrap();
-    d.unwrap();
-    e.unwrap();
-    f.unwrap();
-    g.unwrap();
+    [b, c, d, e, f, g].into_iter().for_each(|x| x.unwrap());
 }
 
 #[derive(Clone, Copy)]
@@ -126,8 +117,6 @@ pub async fn run_simulation<W: AsyncWrite + Unpin>(
     dt: Float,
     output: &mut W,
 ) {
-    output.write_all(b"t,x,y").await.unwrap();
-
     let mut object = FreeFallObject {
         snapshot: initial_snapshot,
         forces: vec![
@@ -137,20 +126,37 @@ pub async fn run_simulation<W: AsyncWrite + Unpin>(
     };
 
     let mut t = 0.0;
+    let mut datapoints = Vec::new();
 
     loop {
-        let buf = format!(
-            "{}, {}, {},\n",
-            t, object.snapshot.position[0], object.snapshot.position[1]
-        );
-
-        output.write_all(buf.as_bytes()).await.unwrap();
+        datapoints.push([t, object.snapshot.position[0], object.snapshot.position[1]]);
 
         object.step_forward(dt);
         t += dt;
 
         if object.snapshot.position.y < 0.0 {
             break;
+        }
+    }
+
+    let mut output_writer = BufWriter::new(output);
+
+    output_writer.write_all(b"t,x,y\n").await.unwrap();
+
+    if datapoints.len() > NUM_DATAPOINTS {
+        let mut index = 0.0;
+
+        let step_size = datapoints.len() as f32 / NUM_DATAPOINTS as f32;
+
+        while let Some(datapoint) = datapoints.get(index as usize) {
+            let buf = format!("{}, {}, {}\n", datapoint[0], datapoint[1], datapoint[2]);
+            output_writer.write_all(buf.as_bytes()).await.unwrap();
+            index += step_size;
+        }
+    } else {
+        for datapoint in datapoints {
+            let buf = format!("{}, {}, {}\n", datapoint[0], datapoint[1], datapoint[2]);
+            output_writer.write_all(buf.as_bytes()).await.unwrap();
         }
     }
 }

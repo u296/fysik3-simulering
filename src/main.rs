@@ -1,7 +1,9 @@
-use fysik3_simulering::Float;
+use fysik3_simulering::{spawn_timed_task, Float};
 use nalgebra::Vector2;
+use tokio::join;
 use uppgift_1::uppgift_1;
 use uppgift_2::uppgift_2;
+use uppgift_3::uppgift_3;
 
 mod uppgift_1;
 mod uppgift_2;
@@ -13,6 +15,10 @@ fn vector_len(v: Vector2<Float>) -> Float {
 
 #[tokio::main]
 async fn main() {
-    uppgift_1().await;
-    //uppgift_2().await;
+    let (a, b, c) = join!(
+        spawn_timed_task("uppgift 1", uppgift_1),
+        spawn_timed_task("uppgift 2", uppgift_2),
+        spawn_timed_task("uppgift 3", uppgift_3)
+    );
+    [a, b, c].into_iter().for_each(|x| x.unwrap());
 }

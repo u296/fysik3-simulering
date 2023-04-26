@@ -1,9 +1,7 @@
 use super::prelude::*;
 
 pub async fn uppgift_d() {
-    let start = Instant::now();
-
-    ensure_dir_exists("uppgifter/2/d");
+    ensure_dir_exists("uppgifter/2/d").await;
 
     let values = vec![-10.0, -5.0, 0.0, 5.0, 10.0];
 
@@ -19,9 +17,4 @@ pub async fn uppgift_d() {
         };
         run_simulation(snapshot, DEFAULT_R, HONEY_RHO, 0.001, &mut output_file).await;
     }
-
-    println!(
-        "2-d finished in {}",
-        Instant::now().duration_since(start).as_secs_f64()
-    );
 }
