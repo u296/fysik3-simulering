@@ -1,5 +1,6 @@
 use fysik3_simulering::{
-    spawn_timed_task, Float, FreeFallObject, FreeFallObjectSnapshot, PhysicsSystem,
+    euler_cromer::EulerCromerSolver, spawn_timed_task, Float, FreeFallObject,
+    FreeFallObjectSnapshot, PhysicsSystem,
 };
 use lazy_static::lazy_static;
 use nalgebra::{vector, Vector2};
@@ -28,7 +29,7 @@ mod del_e;
 
 const NUM_DATAPOINTS: usize = 2000;
 const ACCELERATION_STOP_THRESHHOLD: Float = 0.001;
-const DEFAULT_BALL_RADIUS: Float = 0.005;
+const DEFAULT_BALL_RADIUS: Float = 0.01;
 
 lazy_static! {
     pub static ref DEFAULT_BALL: FreeFallObjectSnapshot = FreeFallObjectSnapshot {
@@ -76,23 +77,27 @@ pub async fn run_simulation<W: AsyncWrite + Unpin>(
 ) {
     let g = 9.82;
 
-    let mut object = FreeFallObject {
+    let mut solver = EulerCromerSolver::new(FreeFallObject {
         snapshot: init_snapshot,
         forces: vec![
             Box::new(move |o| gravity_force(o, g)),
             Box::new(move |o| floating_force(o, g, rho)),
             Box::new(move |o| dampening_force(o, r)),
         ],
-    };
+    });
 
     let mut t = 0.0;
 
     let mut datapoints = Vec::new();
 
     loop {
-        datapoints.push([t, object.snapshot.velocity[1], object.snapshot.position[1]]);
+        datapoints.push([
+            t,
+            solver.object.snapshot.velocity[1],
+            solver.object.snapshot.position[1],
+        ]);
 
-        if vector_len(object.step_forward(dt).acceleration) < ACCELERATION_STOP_THRESHHOLD {
+        if vector_len(solver.step_forward(dt).acceleration) < ACCELERATION_STOP_THRESHHOLD {
             break;
         }
 
@@ -125,4 +130,6 @@ pub async fn run_simulation<W: AsyncWrite + Unpin>(
             output_writer.write_all(buf.as_bytes()).await.unwrap();
         }
     }
+
+    output_writer.flush().await.unwrap();
 }

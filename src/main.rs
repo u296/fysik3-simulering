@@ -13,8 +13,15 @@ fn vector_len(v: Vector2<Float>) -> Float {
     (v[0].powi(2) + v[1].powi(2)).sqrt()
 }
 
-#[tokio::main]
-async fn main() {
+fn main() {
+    tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(async_main());
+}
+
+async fn async_main() {
     let (a, b, c) = join!(
         spawn_timed_task("uppgift 1", uppgift_1),
         spawn_timed_task("uppgift 2", uppgift_2),

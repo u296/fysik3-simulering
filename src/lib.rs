@@ -6,11 +6,19 @@ use tokio::{
     task::{self, JoinHandle},
 };
 
+pub mod euler;
+pub mod euler_cromer;
+
 pub type Float = f64;
 
 pub trait PhysicsSystem {
-    type StepResultType;
-    fn step_forward(&mut self, dt: Float) -> Self::StepResultType;
+    type Applied;
+    fn step_forward(&mut self, dt: Float) -> Self::Applied;
+    fn get_applied(&self) -> Self::Applied;
+}
+
+pub trait HasObject {
+    fn get_object<'a>(&'a self) -> &'a FreeFallObject;
 }
 
 pub struct FreeFallObject {
@@ -26,24 +34,6 @@ pub struct FreeFallObjectSnapshot {
     pub volume: Float,
     pub position: Vector2<Float>,
     pub velocity: Vector2<Float>,
-}
-
-impl PhysicsSystem for FreeFallObject {
-    type StepResultType = Step;
-    fn step_forward(&mut self, dt: Float) -> Step {
-        let force_result: Vector2<Float> = self.forces.iter().map(|f| f(&self.snapshot)).sum();
-
-        let acceleration = force_result / self.snapshot.mass;
-
-        //euler cromers method
-
-        self.snapshot.velocity += acceleration * dt;
-        self.snapshot.position += self.snapshot.velocity * dt;
-        Step {
-            force: force_result,
-            acceleration,
-        }
-    }
 }
 
 pub struct Step {

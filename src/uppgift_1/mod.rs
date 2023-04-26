@@ -1,6 +1,8 @@
 use tokio::io::{AsyncWriteExt, BufWriter};
 
-use fysik3_simulering::{Float, FreeFallObject, FreeFallObjectSnapshot, PhysicsSystem};
+use fysik3_simulering::{
+    euler_cromer::EulerCromerSolver, Float, FreeFallObject, FreeFallObjectSnapshot, PhysicsSystem,
+};
 use lazy_static::lazy_static;
 use nalgebra::{vector, Vector2};
 use tokio::join;
@@ -117,24 +119,28 @@ pub async fn run_simulation<W: AsyncWrite + Unpin>(
     dt: Float,
     output: &mut W,
 ) {
-    let mut object = FreeFallObject {
+    let mut solver = EulerCromerSolver::new(FreeFallObject {
         snapshot: initial_snapshot,
         forces: vec![
             Box::new(|o| gravity_force(o, 9.82)),
             Box::new(move |o| air_drag_force(o, air_resistance_params)),
         ],
-    };
+    });
 
     let mut t = 0.0;
     let mut datapoints = Vec::new();
 
     loop {
-        datapoints.push([t, object.snapshot.position[0], object.snapshot.position[1]]);
+        datapoints.push([
+            t,
+            solver.object.snapshot.position[0],
+            solver.object.snapshot.position[1],
+        ]);
 
-        object.step_forward(dt);
+        solver.step_forward(dt);
         t += dt;
 
-        if object.snapshot.position.y < 0.0 {
+        if solver.object.snapshot.position.y < 0.0 {
             break;
         }
     }
@@ -159,4 +165,6 @@ pub async fn run_simulation<W: AsyncWrite + Unpin>(
             output_writer.write_all(buf.as_bytes()).await.unwrap();
         }
     }
+
+    output_writer.flush().await.unwrap()
 }
