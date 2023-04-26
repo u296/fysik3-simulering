@@ -1,8 +1,12 @@
-use std::io::Write;
-
-use fysik3_simulering::{Float, FreeFallObject, FreeFallObjectSnapshot, PhysicsSystem};
+use fysik3_simulering::{
+    spawn_timed_task, Float, FreeFallObject, FreeFallObjectSnapshot, PhysicsSystem,
+};
 use lazy_static::lazy_static;
 use nalgebra::{vector, Vector2};
+use tokio::{
+    io::{AsyncWrite, AsyncWriteExt},
+    join,
+};
 
 use crate::vector_len;
 
@@ -12,12 +16,15 @@ mod prelude {
         ensure_dir_exists, Float, FreeFallObject, FreeFallObjectSnapshot, PhysicsSystem,
     };
     pub use nalgebra::{vector, Vector2};
-    pub use std::{fs::File, io::Write, path::Path};
+    pub use std::{io::Write, path::Path, time::Instant};
+    pub use tokio::{fs::File, io::AsyncWrite};
 }
 
 mod del_a;
 mod del_b;
 mod del_c;
+mod del_d;
+mod del_e;
 
 const ACCELERATION_STOP_THRESHHOLD: Float = 0.001;
 const DEFAULT_BALL_RADIUS: Float = 0.005;
@@ -48,18 +55,20 @@ fn dampening_force(object: &FreeFallObjectSnapshot, r: Float) -> Vector2<Float> 
     -object.velocity * r
 }
 
-pub fn uppgift_2() {
-    del_a::uppgift_a();
-    del_b::uppgift_b();
-    del_c::uppgift_c();
+pub async fn uppgift_2() {
+    /*join!(
+        //spawn_timed_task("2-a", del_a::uppgift_a),
+        //spawn_timed_task("2-b", del_b::uppgift_b),
+        //spawn_timed_task("2-c", del_c::uppgift_c)
+    );*/
 }
 
-pub fn run_simulation(
+pub async fn run_simulation<W: AsyncWrite + Unpin>(
     init_snapshot: FreeFallObjectSnapshot,
     r: Float,
     rho: Float,
     dt: Float,
-    output: &mut impl Write,
+    output: &mut W,
 ) {
     let g = 9.82;
 
@@ -74,15 +83,14 @@ pub fn run_simulation(
 
     let mut t = 0.0;
 
-    writeln!(output, "t,v,y").unwrap();
+    output.write_all(b"t,v,y").await.unwrap();
 
     loop {
-        writeln!(
-            output,
+        let buf = format!(
             "{}, {}, {}",
             t, object.snapshot.velocity[1], object.snapshot.position[1]
-        )
-        .unwrap();
+        );
+        output.write_all(buf.as_bytes()).await.unwrap();
 
         if vector_len(object.step_forward(dt).acceleration) < ACCELERATION_STOP_THRESHHOLD {
             break;

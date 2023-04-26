@@ -1,7 +1,7 @@
 use super::{prelude::*, AIRCRAFT_RESISTANCE, AIRCRAFT_SNAPSHOT};
 
-pub fn uppgift_g() {
-    ensure_dir_exists("uppgifter/1/g");
+pub async fn uppgift_g() {
+    ensure_dir_exists("uppgifter/1/g").await;
 
     let vals = vec![0.001, 0.005, 0.01, 0.05, 0.1];
 
@@ -10,8 +10,19 @@ pub fn uppgift_g() {
         ..*AIRCRAFT_RESISTANCE
     };
 
-    for dt in vals {
-        let mut output_file = File::create(&format!("uppgifter/1/g/dt-{dt}.csv")).unwrap();
-        run_simulation(*AIRCRAFT_SNAPSHOT, air_resistance, dt, &mut output_file)
+    let tasks: Vec<_> = vals
+        .into_iter()
+        .map(|dt| {
+            tokio::spawn((move || async move {
+                let mut output_file = File::create(&format!("uppgifter/1/g/dt-{dt}.csv"))
+                    .await
+                    .unwrap();
+                run_simulation(*AIRCRAFT_SNAPSHOT, air_resistance, dt, &mut output_file).await;
+            })())
+        })
+        .collect();
+
+    for handle in tasks {
+        handle.await.unwrap();
     }
 }

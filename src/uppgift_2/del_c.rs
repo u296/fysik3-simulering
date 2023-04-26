@@ -3,7 +3,7 @@ use super::prelude::*;
 /*
    running this at low tickrates causes severe instability
 */
-pub fn uppgift_c() {
+pub async fn uppgift_c() {
     {
         // mass variation
         ensure_dir_exists("uppgifter/2/c/mass");
@@ -16,9 +16,10 @@ pub fn uppgift_c() {
                 ..*DEFAULT_BALL
             };
 
-            let mut output_file =
-                File::create(&format!("uppgifter/2/c/mass/mass-{mass}.csv")).unwrap();
-            run_simulation(initial, DEFAULT_R, HONEY_RHO, 0.001, &mut output_file);
+            let mut output_file = File::create(&format!("uppgifter/2/c/mass/mass-{mass}.csv"))
+                .await
+                .unwrap();
+            run_simulation(initial, DEFAULT_R, HONEY_RHO, 0.001, &mut output_file).await;
         }
     }
 
@@ -36,8 +37,10 @@ pub fn uppgift_c() {
             };
 
             let mut output_file =
-                File::create(&format!("uppgifter/2/c/radius/radius-{radius}.csv")).unwrap();
-            run_simulation(initial, DEFAULT_R, HONEY_RHO, 0.001, &mut output_file);
+                File::create(&format!("uppgifter/2/c/radius/radius-{radius}.csv"))
+                    .await
+                    .unwrap();
+            run_simulation(initial, DEFAULT_R, HONEY_RHO, 0.001, &mut output_file).await;
         }
     }
 }

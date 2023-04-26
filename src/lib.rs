@@ -1,6 +1,10 @@
-use std::{fs, io::ErrorKind, path::Path};
+use std::{future::Future, io::ErrorKind, path::Path, time::Instant};
 
 use nalgebra::Vector2;
+use tokio::{
+    fs,
+    task::{self, JoinHandle},
+};
 
 pub type Float = f64;
 
@@ -11,7 +15,7 @@ pub trait PhysicsSystem {
 
 pub struct FreeFallObject {
     pub snapshot: FreeFallObjectSnapshot,
-    pub forces: Vec<Box<dyn Fn(&FreeFallObjectSnapshot) -> Vector2<Float>>>,
+    pub forces: Vec<Box<dyn Send + Fn(&FreeFallObjectSnapshot) -> Vector2<Float>>>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -47,12 +51,32 @@ pub struct Step {
     pub acceleration: Vector2<Float>,
 }
 
-pub fn ensure_dir_exists(p: impl AsRef<Path>) {
-    match fs::create_dir_all(p) {
+pub async fn ensure_dir_exists(p: impl AsRef<Path>) {
+    match fs::create_dir_all(p).await {
         Err(e) => match e.kind() {
             ErrorKind::AlreadyExists => (),
-            _ => panic!("failed to create dir: {e}"),
+            _ => panic!("failed to create dir: kind = {} error: {e}", e.kind()),
         },
         _ => (),
     }
+}
+
+pub async fn spawn_timed_task<
+    T: Send + Sync + 'static,
+    F: Future<Output = T> + Send + 'static,
+    FN: Send + FnOnce() -> F + 'static,
+>(
+    name: &'static str,
+    f: FN,
+) -> JoinHandle<T> {
+    task::spawn((move || async move {
+        let start = Instant::now();
+        let result = f().await;
+
+        println!(
+            "task {name} finished in {:.3} s",
+            Instant::now().duration_since(start).as_secs_f32()
+        );
+        result
+    })())
 }

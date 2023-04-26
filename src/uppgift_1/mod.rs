@@ -1,21 +1,29 @@
 use std::fs;
+use std::future::Future;
 use std::io::{ErrorKind, Write};
 use std::path::Path;
+use std::time::Instant;
+use tokio::io::AsyncWriteExt;
 
 use fysik3_simulering::{Float, FreeFallObject, FreeFallObjectSnapshot, PhysicsSystem};
 use lazy_static::lazy_static;
 use nalgebra::{vector, Vector2};
+use tokio::join;
+use tokio::task::JoinHandle;
 
 use crate::vector_len;
 
 mod prelude {
     pub use super::{run_simulation, AirResistanceParameters};
     pub use fysik3_simulering::{
-        ensure_dir_exists, Float, FreeFallObject, FreeFallObjectSnapshot, PhysicsSystem,
+        ensure_dir_exists, spawn_timed_task, Float, FreeFallObject, FreeFallObjectSnapshot,
+        PhysicsSystem,
     };
     pub use nalgebra::{vector, Vector2};
-    pub use std::{fs::File, io::Write, path::Path};
+    pub use std::{io::Write, path::Path};
+    pub use tokio::{fs::File, io::AsyncWrite, task};
 }
+use prelude::*;
 
 mod del_b;
 mod del_c;
@@ -88,13 +96,15 @@ fn air_drag_force(o: &FreeFallObjectSnapshot, params: AirResistanceParameters) -
     0.5 * params.c_d * params.rho * o.frontal_area * -1.0 * o.velocity * vector_len(o.velocity)
 }
 
-pub fn uppgift_1() {
-    del_b::uppgift_b();
-    del_c::uppgift_c();
-    del_d::uppgift_d();
-    del_e::uppgift_e();
-    del_f::uppgift_f();
-    del_g::uppgift_g();
+pub async fn uppgift_1() {
+    join!(
+        spawn_timed_task("1-b", del_b::uppgift_b),
+        spawn_timed_task("1-c", del_d::uppgift_d),
+        spawn_timed_task("1-d", del_c::uppgift_c),
+        spawn_timed_task("1-e", del_e::uppgift_e),
+        spawn_timed_task("1-f", del_f::uppgift_f),
+        spawn_timed_task("1-g", del_g::uppgift_g)
+    );
 }
 
 #[derive(Clone, Copy)]
@@ -103,12 +113,14 @@ pub struct AirResistanceParameters {
     rho: Float,
 }
 
-pub fn run_simulation(
+pub async fn run_simulation<W: AsyncWrite + Unpin>(
     initial_snapshot: FreeFallObjectSnapshot,
     air_resistance_params: AirResistanceParameters,
     dt: Float,
-    output: &mut impl Write,
+    output: &mut W,
 ) {
+    output.write_all(b"t,x,y").await.unwrap();
+
     let mut object = FreeFallObject {
         snapshot: initial_snapshot,
         forces: vec![
@@ -119,15 +131,13 @@ pub fn run_simulation(
 
     let mut t = 0.0;
 
-    writeln!(output, "t,x,y").unwrap();
-
     loop {
-        writeln!(
-            output,
-            "{},{}, {},",
+        let buf = format!(
+            "{}, {}, {},\n",
             t, object.snapshot.position[0], object.snapshot.position[1]
-        )
-        .unwrap();
+        );
+
+        output.write_all(buf.as_bytes()).await.unwrap();
 
         object.step_forward(dt);
         t += dt;
