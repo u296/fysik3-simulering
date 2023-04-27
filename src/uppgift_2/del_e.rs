@@ -6,7 +6,7 @@ pub async fn uppgift_e() {
     run_simulation(
         *DEFAULT_BALL,
         0.9 * DEFAULT_BALL_RADIUS,
-        918.0,
+        OIL_RHO,
         0.001,
         &mut output_file,
     )

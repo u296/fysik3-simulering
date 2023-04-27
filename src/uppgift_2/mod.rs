@@ -1,9 +1,9 @@
 use fysik3_simulering::{
     euler_cromer::EulerCromerSolver, spawn_timed_task, Float, FreeFallObject,
-    FreeFallObjectSnapshot, PhysicsSystem,
+    FreeFallObjectSnapshot, PhysicsSystemSolver,
 };
 use lazy_static::lazy_static;
-use nalgebra::{vector, Vector2};
+use nalgebra::vector;
 use tokio::{
     io::{AsyncWrite, AsyncWriteExt, BufWriter},
     join,
@@ -12,9 +12,9 @@ use tokio::{
 use crate::vector_len;
 
 mod prelude {
-    pub use super::{run_simulation, DEFAULT_BALL, DEFAULT_R, HONEY_RHO};
+    pub use super::{run_simulation, DEFAULT_BALL, DEFAULT_R, HONEY_RHO, OIL_RHO};
     pub use fysik3_simulering::{
-        ensure_dir_exists, Float, FreeFallObject, FreeFallObjectSnapshot, PhysicsSystem,
+        ensure_dir_exists, Float, FreeFallObject, FreeFallObjectSnapshot, PhysicsSystemSolver,
     };
     pub use nalgebra::{vector, Vector2};
     pub use std::{io::Write, path::Path, time::Instant};
@@ -44,18 +44,7 @@ lazy_static! {
 
 pub const DEFAULT_R: Float = DEFAULT_BALL_RADIUS * 90.0;
 pub const HONEY_RHO: Float = 1420.0;
-
-fn floating_force(object: &FreeFallObjectSnapshot, g: Float, rho: Float) -> Vector2<Float> {
-    vector![0.0, 1.0] * rho * g * object.volume
-}
-
-fn gravity_force(object: &FreeFallObjectSnapshot, g: Float) -> Vector2<Float> {
-    vector![0.0, -1.0] * object.mass * g
-}
-
-fn dampening_force(object: &FreeFallObjectSnapshot, r: Float) -> Vector2<Float> {
-    -object.velocity * r
-}
+pub const OIL_RHO: Float = 918.0;
 
 pub async fn uppgift_2() {
     let (a, b, c, d, e) = join!(
@@ -80,9 +69,9 @@ pub async fn run_simulation<W: AsyncWrite + Unpin>(
     let mut solver = EulerCromerSolver::new(FreeFallObject {
         snapshot: init_snapshot,
         forces: vec![
-            Box::new(move |o| gravity_force(o, g)),
-            Box::new(move |o| floating_force(o, g, rho)),
-            Box::new(move |o| dampening_force(o, r)),
+            Box::new(move |object| vector![0.0, -1.0] * object.mass * g),
+            Box::new(move |object| vector![0.0, 1.0] * rho * g * object.volume),
+            Box::new(move |object| -object.velocity * r),
         ],
     });
 

@@ -1,14 +1,16 @@
 mod prelude {
     pub use super::{run_simulation, DEFAULT_INIT_SNAPSHOT, DEFAULT_K};
     pub use fysik3_simulering::{
-        ensure_dir_exists, euler::EulerSolver, euler_cromer::EulerCromerSolver, Float,
-        FreeFallObject, FreeFallObjectSnapshot, PhysicsSystem,
+        ensure_dir_exists, euler::EulerSolver, euler_cromer::EulerCromerSolver,
+        FreeFallObjectSnapshot, PhysicsSystemSolver,
     };
-    pub use nalgebra::{vector, Vector2};
+    pub use nalgebra::vector;
     pub use tokio::fs::File;
 }
 
-use fysik3_simulering::{spawn_timed_task, HasObject, Step};
+use fysik3_simulering::{
+    spawn_timed_task, Float, FreeFallObject, SingleObjectPhysicsSystemSolver, Step,
+};
 use prelude::*;
 use tokio::{
     io::{AsyncWrite, AsyncWriteExt, BufWriter},
@@ -56,7 +58,10 @@ pub async fn uppgift_3() {
         .for_each(|x| x.unwrap());
 }
 
-pub async fn run_simulation<W: Unpin + AsyncWrite, P: PhysicsSystem<Applied = Step> + HasObject>(
+pub async fn run_simulation<
+    W: Unpin + AsyncWrite,
+    P: SingleObjectPhysicsSystemSolver<Applied = Step>,
+>(
     init_snapshot: FreeFallObjectSnapshot,
     k: Float,
     r: Float,

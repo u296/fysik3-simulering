@@ -1,6 +1,6 @@
 use nalgebra::Vector2;
 
-use crate::{Float, FreeFallObject, HasObject, PhysicsSystem, Step};
+use crate::{Float, FreeFallObject, PhysicsSystemSolver, SingleObjectPhysicsSystemSolver, Step};
 
 pub struct EulerSolver {
     pub object: FreeFallObject,
@@ -12,7 +12,7 @@ impl EulerSolver {
     }
 }
 
-impl PhysicsSystem for EulerSolver {
+impl PhysicsSystemSolver for EulerSolver {
     type Applied = Step;
     fn step_forward(&mut self, dt: Float) -> Step {
         let applied = self.get_applied();
@@ -43,7 +43,7 @@ impl PhysicsSystem for EulerSolver {
     }
 }
 
-impl HasObject for EulerSolver {
+impl SingleObjectPhysicsSystemSolver for EulerSolver {
     fn get_object<'a>(&'a self) -> &'a FreeFallObject {
         &self.object
     }

@@ -11,13 +11,13 @@ pub mod euler_cromer;
 
 pub type Float = f64;
 
-pub trait PhysicsSystem {
+pub trait PhysicsSystemSolver {
     type Applied;
     fn step_forward(&mut self, dt: Float) -> Self::Applied;
     fn get_applied(&self) -> Self::Applied;
 }
 
-pub trait HasObject {
+pub trait SingleObjectPhysicsSystemSolver: PhysicsSystemSolver {
     fn get_object<'a>(&'a self) -> &'a FreeFallObject;
 }
 

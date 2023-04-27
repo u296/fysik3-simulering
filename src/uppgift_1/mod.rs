@@ -1,10 +1,11 @@
 use tokio::io::{AsyncWriteExt, BufWriter};
 
 use fysik3_simulering::{
-    euler_cromer::EulerCromerSolver, Float, FreeFallObject, FreeFallObjectSnapshot, PhysicsSystem,
+    euler_cromer::EulerCromerSolver, Float, FreeFallObject, FreeFallObjectSnapshot,
+    PhysicsSystemSolver,
 };
 use lazy_static::lazy_static;
-use nalgebra::{vector, Vector2};
+use nalgebra::vector;
 use tokio::join;
 
 use crate::vector_len;
@@ -13,7 +14,7 @@ mod prelude {
     pub use super::{run_simulation, AirResistanceParameters};
     pub use fysik3_simulering::{
         ensure_dir_exists, spawn_timed_task, Float, FreeFallObject, FreeFallObjectSnapshot,
-        PhysicsSystem,
+        PhysicsSystemSolver,
     };
     pub use nalgebra::{vector, Vector2};
     pub use std::{io::Write, path::Path};
@@ -44,10 +45,10 @@ lazy_static! {
     };
 
 
-static ref BALL_AIR_RESISTANCE: AirResistanceParameters = AirResistanceParameters {
-    c_d: 0.47,
-    rho: 1.2,
-};
+    static ref BALL_AIR_RESISTANCE: AirResistanceParameters = AirResistanceParameters {
+        c_d: 0.47,
+        rho: 1.2,
+    };
 
 /*
 Simulering:
@@ -68,30 +69,25 @@ anger följande information om flygplanet:
     * lyfthastighet: 130-165 knop
  */
 
-static ref AIRCRAFT_SNAPSHOT: FreeFallObjectSnapshot = FreeFallObjectSnapshot {
-    mass: 347450.0,
-    frontal_area: 245.5,
-    volume: 0.0,
-    charge: 0.0,
-    position: vector![0.0, 10.0],
-    velocity: vector![
-        12.5f64.to_radians().cos() * 165.0 * 0.51444,
-        12.5f64.to_radians().sin() * 165.0 * 0.51444
-    ],
-};
+    static ref AIRCRAFT_SNAPSHOT: FreeFallObjectSnapshot = {
+        let knots_to_mps = 0.51444;
+        FreeFallObjectSnapshot {
+            mass: 347450.0,
+            frontal_area: 245.5,
+            volume: 0.0,
+            charge: 0.0,
+            position: vector![0.0, 10.0],
+            velocity: vector![
+                12.5f64.to_radians().cos() * 165.0 * knots_to_mps,
+                12.5f64.to_radians().sin() * 165.0 * knots_to_mps
+            ],
+        }
+    };
 
-static ref AIRCRAFT_RESISTANCE: AirResistanceParameters = AirResistanceParameters {
-    c_d: 0.025,
-    rho: 1.2,
-};
-}
-
-fn gravity_force(o: &FreeFallObjectSnapshot, g: Float) -> Vector2<Float> {
-    o.mass * g * vector![0.0, -1.0]
-}
-
-fn air_drag_force(o: &FreeFallObjectSnapshot, params: AirResistanceParameters) -> Vector2<Float> {
-    0.5 * params.c_d * params.rho * o.frontal_area * -1.0 * o.velocity * vector_len(o.velocity)
+    static ref AIRCRAFT_RESISTANCE: AirResistanceParameters = AirResistanceParameters {
+        c_d: 0.025,
+        rho: 1.2,
+    };
 }
 
 pub async fn uppgift_1() {
@@ -119,11 +115,19 @@ pub async fn run_simulation<W: AsyncWrite + Unpin>(
     dt: Float,
     output: &mut W,
 ) {
+    const G: Float = 9.82;
     let mut solver = EulerCromerSolver::new(FreeFallObject {
         snapshot: initial_snapshot,
         forces: vec![
-            Box::new(|o| gravity_force(o, 9.82)),
-            Box::new(move |o| air_drag_force(o, air_resistance_params)),
+            Box::new(move |o| o.mass * G * vector![0.0, -1.0]),
+            Box::new(move |o| {
+                0.5 * air_resistance_params.c_d
+                    * air_resistance_params.rho
+                    * o.frontal_area
+                    * -1.0
+                    * o.velocity
+                    * vector_len(o.velocity)
+            }),
         ],
     });
 
