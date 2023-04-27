@@ -67,15 +67,18 @@ pub async fn run_simulation<
     r: Float,
     dt: Float,
     output: &mut W,
-    solver_new: impl Fn(FreeFallObject) -> P,
+    solver_new: impl Fn(FreeFallObject, Float) -> P,
 ) {
-    let mut solver = solver_new(FreeFallObject {
-        snapshot: init_snapshot,
-        forces: vec![
-            Box::new(move |o| o.position * -k),
-            Box::new(move |o| o.velocity * -r),
-        ],
-    });
+    let mut solver = solver_new(
+        FreeFallObject {
+            snapshot: init_snapshot,
+            forces: vec![
+                Box::new(move |o| o.position * -k),
+                Box::new(move |o| o.velocity * -r),
+            ],
+        },
+        dt,
+    );
 
     let mut t = 0.0;
     let mut datapoints = Vec::new();
@@ -97,7 +100,7 @@ pub async fn run_simulation<
             mech_energy,
         ]);
 
-        solver.step_forward(dt).acceleration;
+        solver.step_forward().acceleration;
         t += dt;
 
         if t > 10.0 {

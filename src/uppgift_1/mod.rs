@@ -116,20 +116,23 @@ pub async fn run_simulation<W: AsyncWrite + Unpin>(
     output: &mut W,
 ) {
     const G: Float = 9.82;
-    let mut solver = EulerCromerSolver::new(FreeFallObject {
-        snapshot: initial_snapshot,
-        forces: vec![
-            Box::new(move |o| o.mass * G * vector![0.0, -1.0]),
-            Box::new(move |o| {
-                0.5 * air_resistance_params.c_d
-                    * air_resistance_params.rho
-                    * o.frontal_area
-                    * -1.0
-                    * o.velocity
-                    * vector_len(o.velocity)
-            }),
-        ],
-    });
+    let mut solver = EulerCromerSolver::new(
+        FreeFallObject {
+            snapshot: initial_snapshot,
+            forces: vec![
+                Box::new(move |o| o.mass * G * vector![0.0, -1.0]),
+                Box::new(move |o| {
+                    0.5 * air_resistance_params.c_d
+                        * air_resistance_params.rho
+                        * o.frontal_area
+                        * -1.0
+                        * o.velocity
+                        * vector_len(o.velocity)
+                }),
+            ],
+        },
+        dt,
+    );
 
     let mut t = 0.0;
     let mut datapoints = Vec::new();
@@ -141,7 +144,7 @@ pub async fn run_simulation<W: AsyncWrite + Unpin>(
             solver.object.snapshot.position[1],
         ]);
 
-        solver.step_forward(dt);
+        solver.step_forward();
         t += dt;
 
         if solver.object.snapshot.position.y < 0.0 {

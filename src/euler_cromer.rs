@@ -4,25 +4,26 @@ use crate::{Float, FreeFallObject, PhysicsSystemSolver, SingleObjectPhysicsSyste
 
 pub struct EulerCromerSolver {
     pub object: FreeFallObject,
+    dt: Float,
 }
 
 impl EulerCromerSolver {
-    pub fn new(object: FreeFallObject) -> Self {
-        Self { object }
+    pub fn new(object: FreeFallObject, dt: Float) -> Self {
+        Self { object, dt }
     }
 }
 
 impl PhysicsSystemSolver for EulerCromerSolver {
     type Applied = Step;
-    fn step_forward(&mut self, dt: Float) -> Step {
+    fn step_forward(&mut self) -> Step {
         let applied = self.get_applied();
         let force = applied.force;
         let acceleration = applied.acceleration;
 
         //euler cromers method
 
-        self.object.snapshot.velocity += acceleration * dt;
-        self.object.snapshot.position += self.object.snapshot.velocity * dt;
+        self.object.snapshot.velocity += acceleration * self.dt;
+        self.object.snapshot.position += self.object.snapshot.velocity * self.dt;
         Step {
             force,
             acceleration,
@@ -42,6 +43,10 @@ impl PhysicsSystemSolver for EulerCromerSolver {
             force,
             acceleration,
         }
+    }
+
+    fn get_dt(&self) -> Float {
+        self.dt
     }
 }
 

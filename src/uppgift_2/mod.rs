@@ -66,14 +66,17 @@ pub async fn run_simulation<W: AsyncWrite + Unpin>(
 ) {
     let g = 9.82;
 
-    let mut solver = EulerCromerSolver::new(FreeFallObject {
-        snapshot: init_snapshot,
-        forces: vec![
-            Box::new(move |object| vector![0.0, -1.0] * object.mass * g),
-            Box::new(move |object| vector![0.0, 1.0] * rho * g * object.volume),
-            Box::new(move |object| -object.velocity * r),
-        ],
-    });
+    let mut solver = EulerCromerSolver::new(
+        FreeFallObject {
+            snapshot: init_snapshot,
+            forces: vec![
+                Box::new(move |object| vector![0.0, -1.0] * object.mass * g),
+                Box::new(move |object| vector![0.0, 1.0] * rho * g * object.volume),
+                Box::new(move |object| -object.velocity * r),
+            ],
+        },
+        dt,
+    );
 
     let mut t = 0.0;
 
@@ -86,7 +89,7 @@ pub async fn run_simulation<W: AsyncWrite + Unpin>(
             solver.object.snapshot.position[1],
         ]);
 
-        if vector_len(solver.step_forward(dt).acceleration) < ACCELERATION_STOP_THRESHHOLD {
+        if vector_len(solver.step_forward().acceleration) < ACCELERATION_STOP_THRESHHOLD {
             break;
         }
 
