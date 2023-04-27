@@ -1,6 +1,6 @@
-use fysik3_simulering::{spawn_timed_task, Float};
-use nalgebra::Vector2;
 use tokio::join;
+
+use fysik3_simulering::spawn_timed_task;
 use uppgift_1::uppgift_1;
 use uppgift_2::uppgift_2;
 use uppgift_3::uppgift_3;
@@ -8,10 +8,7 @@ use uppgift_3::uppgift_3;
 mod uppgift_1;
 mod uppgift_2;
 mod uppgift_3;
-
-fn vector_len(v: Vector2<Float>) -> Float {
-    (v[0].powi(2) + v[1].powi(2)).sqrt()
-}
+mod uppgift_extra_2;
 
 fn main() {
     tokio::runtime::Builder::new_multi_thread()

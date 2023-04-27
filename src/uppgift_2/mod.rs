@@ -9,8 +9,6 @@ use tokio::{
     join,
 };
 
-use crate::vector_len;
-
 mod prelude {
     pub use super::{run_simulation, DEFAULT_BALL, DEFAULT_R, HONEY_RHO, OIL_RHO};
     pub use fysik3_simulering::{
@@ -32,13 +30,13 @@ const ACCELERATION_STOP_THRESHHOLD: Float = 0.001;
 const DEFAULT_BALL_RADIUS: Float = 0.01;
 
 lazy_static! {
-    pub static ref DEFAULT_BALL: FreeFallObjectSnapshot = FreeFallObjectSnapshot {
+    pub static ref DEFAULT_BALL: FreeFallObjectSnapshot<2> = FreeFallObjectSnapshot {
         mass: 0.5,
-        charge: 0.0,
         frontal_area: DEFAULT_BALL_RADIUS.powi(2) * std::f64::consts::PI,
         volume: std::f64::consts::PI * 4.0 * DEFAULT_BALL_RADIUS.powi(3) / 3.0,
         position: vector![0.0, 0.0],
         velocity: vector![0.0, 0.0],
+        angular_velocity: vector![0.0, 0.0],
     };
 }
 
@@ -58,7 +56,7 @@ pub async fn uppgift_2() {
 }
 
 pub async fn run_simulation<W: AsyncWrite + Unpin>(
-    init_snapshot: FreeFallObjectSnapshot,
+    init_snapshot: FreeFallObjectSnapshot<2>,
     r: Float,
     rho: Float,
     dt: Float,
@@ -89,7 +87,7 @@ pub async fn run_simulation<W: AsyncWrite + Unpin>(
             solver.object.snapshot.position[1],
         ]);
 
-        if vector_len(solver.step_forward().acceleration) < ACCELERATION_STOP_THRESHHOLD {
+        if solver.step_forward().acceleration.magnitude() < ACCELERATION_STOP_THRESHHOLD {
             break;
         }
 

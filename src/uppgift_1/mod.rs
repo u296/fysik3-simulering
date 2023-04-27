@@ -8,8 +8,6 @@ use lazy_static::lazy_static;
 use nalgebra::vector;
 use tokio::join;
 
-use crate::vector_len;
-
 mod prelude {
     pub use super::{run_simulation, AirResistanceParameters};
     pub use fysik3_simulering::{
@@ -32,9 +30,8 @@ mod del_g;
 const NUM_DATAPOINTS: usize = 2000;
 
 lazy_static! {
-    static ref BALL_SNAPSHOT: FreeFallObjectSnapshot = FreeFallObjectSnapshot {
+    static ref BALL_SNAPSHOT: FreeFallObjectSnapshot<2> = FreeFallObjectSnapshot {
         mass: 0.4,
-        charge: 0.0,
         frontal_area: 0.01 * std::f64::consts::PI,
         volume: 0.0,
         position: vector![0.0, 0.0],
@@ -42,6 +39,7 @@ lazy_static! {
             35.0f64.to_radians().cos() * 40.0,
             35.0f64.to_radians().sin() * 40.0
         ],
+        angular_velocity: vector![0.0,0.0],
     };
 
 
@@ -69,18 +67,18 @@ anger följande information om flygplanet:
     * lyfthastighet: 130-165 knop
  */
 
-    static ref AIRCRAFT_SNAPSHOT: FreeFallObjectSnapshot = {
+    static ref AIRCRAFT_SNAPSHOT: FreeFallObjectSnapshot<2> = {
         let knots_to_mps = 0.51444;
         FreeFallObjectSnapshot {
             mass: 347450.0,
             frontal_area: 245.5,
             volume: 0.0,
-            charge: 0.0,
             position: vector![0.0, 10.0],
             velocity: vector![
                 12.5f64.to_radians().cos() * 165.0 * knots_to_mps,
                 12.5f64.to_radians().sin() * 165.0 * knots_to_mps
             ],
+            angular_velocity: vector![0.0, 0.0],
         }
     };
 
@@ -105,12 +103,12 @@ pub async fn uppgift_1() {
 
 #[derive(Clone, Copy)]
 pub struct AirResistanceParameters {
-    c_d: Float,
-    rho: Float,
+    pub c_d: Float,
+    pub rho: Float,
 }
 
 pub async fn run_simulation<W: AsyncWrite + Unpin>(
-    initial_snapshot: FreeFallObjectSnapshot,
+    initial_snapshot: FreeFallObjectSnapshot<2>,
     air_resistance_params: AirResistanceParameters,
     dt: Float,
     output: &mut W,
@@ -127,7 +125,7 @@ pub async fn run_simulation<W: AsyncWrite + Unpin>(
                         * o.frontal_area
                         * -1.0
                         * o.velocity
-                        * vector_len(o.velocity)
+                        * o.velocity.magnitude()
                 }),
             ],
         },

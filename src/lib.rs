@@ -1,6 +1,6 @@
 use std::{future::Future, io::ErrorKind, path::Path, time::Instant};
 
-use nalgebra::Vector2;
+use nalgebra::SVector;
 use tokio::{
     fs,
     task::{self, JoinHandle},
@@ -18,28 +18,28 @@ pub trait PhysicsSystemSolver {
     fn get_dt(&self) -> Float;
 }
 
-pub trait SingleObjectPhysicsSystemSolver: PhysicsSystemSolver {
-    fn get_object<'a>(&'a self) -> &'a FreeFallObject;
+pub trait SingleObjectPhysicsSystemSolver<const D: usize>: PhysicsSystemSolver {
+    fn get_object<'a>(&'a self) -> &'a FreeFallObject<D>;
 }
 
-pub struct FreeFallObject {
-    pub snapshot: FreeFallObjectSnapshot,
-    pub forces: Vec<Box<dyn Send + Fn(&FreeFallObjectSnapshot) -> Vector2<Float>>>,
+pub struct FreeFallObject<const D: usize> {
+    pub snapshot: FreeFallObjectSnapshot<D>,
+    pub forces: Vec<Box<dyn Send + Fn(&FreeFallObjectSnapshot<D>) -> SVector<Float, D>>>,
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct FreeFallObjectSnapshot {
+pub struct FreeFallObjectSnapshot<const D: usize> {
     pub mass: Float,
-    pub charge: Float,
     pub frontal_area: Float,
     pub volume: Float,
-    pub position: Vector2<Float>,
-    pub velocity: Vector2<Float>,
+    pub position: SVector<Float, D>,
+    pub velocity: SVector<Float, D>,
+    pub angular_velocity: SVector<Float, D>,
 }
 
-pub struct Step {
-    pub force: Vector2<Float>,
-    pub acceleration: Vector2<Float>,
+pub struct Step<const D: usize> {
+    pub force: SVector<Float, D>,
+    pub acceleration: SVector<Float, D>,
 }
 
 pub async fn ensure_dir_exists(p: impl AsRef<Path>) {

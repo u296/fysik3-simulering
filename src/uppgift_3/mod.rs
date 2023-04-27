@@ -24,8 +24,6 @@ use del_e::uppgift_e;
 use uppgift_extra_b::uppgift_extra_b;
 use uppgift_extra_c::uppgift_extra_c;
 
-use crate::vector_len;
-
 mod del_a;
 mod del_c;
 mod del_d;
@@ -34,13 +32,13 @@ mod uppgift_extra_b;
 mod uppgift_extra_c;
 
 const NUM_DATAPOINTS: usize = 2000;
-pub const DEFAULT_INIT_SNAPSHOT: FreeFallObjectSnapshot = FreeFallObjectSnapshot {
+pub const DEFAULT_INIT_SNAPSHOT: FreeFallObjectSnapshot<2> = FreeFallObjectSnapshot {
     mass: 1.0,
-    charge: 0.0,
     frontal_area: 0.0,
     volume: 0.0,
     position: vector![10.0, 0.0],
     velocity: vector![0.0, 0.0],
+    angular_velocity: vector![0.0, 0.0],
 };
 pub const DEFAULT_K: Float = 100.0;
 
@@ -60,14 +58,14 @@ pub async fn uppgift_3() {
 
 pub async fn run_simulation<
     W: Unpin + AsyncWrite,
-    P: SingleObjectPhysicsSystemSolver<Applied = Step>,
+    P: SingleObjectPhysicsSystemSolver<2, Applied = Step<2>>,
 >(
-    init_snapshot: FreeFallObjectSnapshot,
+    init_snapshot: FreeFallObjectSnapshot<2>,
     k: Float,
     r: Float,
     dt: Float,
     output: &mut W,
-    solver_new: impl Fn(FreeFallObject, Float) -> P,
+    solver_new: impl Fn(FreeFallObject<2>, Float) -> P,
 ) {
     let mut solver = solver_new(
         FreeFallObject {
@@ -84,9 +82,9 @@ pub async fn run_simulation<
     let mut datapoints = Vec::new();
 
     loop {
-        let potential_energy = k * vector_len(solver.get_object().snapshot.position).powi(2) / 2.0;
+        let potential_energy = k * solver.get_object().snapshot.position.magnitude().powi(2) / 2.0;
         let kinetic_energy = solver.get_object().snapshot.mass
-            * vector_len(solver.get_object().snapshot.velocity).powi(2)
+            * solver.get_object().snapshot.velocity.magnitude().powi(2)
             / 2.0;
         let mech_energy = potential_energy + kinetic_energy;
 
