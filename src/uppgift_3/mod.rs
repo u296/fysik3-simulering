@@ -9,7 +9,7 @@ mod prelude {
 }
 
 use fysik3_simulering::{
-    spawn_timed_task, Float, FreeFallObject, SingleObjectPhysicsSystemSolver, Step,
+    spawn_timed_task, write_datapoint, Float, FreeFallObject, SingleObjectPhysicsSystemSolver, Step,
 };
 use prelude::*;
 use tokio::{
@@ -116,20 +116,12 @@ pub async fn run_simulation<
         let step_size = datapoints.len() as f32 / NUM_DATAPOINTS as f32;
 
         while let Some(datapoint) = datapoints.get(index as usize) {
-            let buf = format!(
-                "{}, {}, {}, {}, {}\n",
-                datapoint[0], datapoint[1], datapoint[2], datapoint[3], datapoint[4]
-            );
-            output_writer.write_all(buf.as_bytes()).await.unwrap();
+            write_datapoint(&mut output_writer, *datapoint).await;
             index += step_size;
         }
     } else {
         for datapoint in datapoints {
-            let buf = format!(
-                "{}, {}, {}, {}, {}\n",
-                datapoint[0], datapoint[1], datapoint[2], datapoint[3], datapoint[4]
-            );
-            output_writer.write_all(buf.as_bytes()).await.unwrap();
+            write_datapoint(&mut output_writer, datapoint).await;
         }
     }
 

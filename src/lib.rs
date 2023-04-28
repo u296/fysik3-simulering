@@ -3,6 +3,7 @@ use std::{future::Future, io::ErrorKind, path::Path, time::Instant};
 use nalgebra::SVector;
 use tokio::{
     fs,
+    io::{AsyncWrite, AsyncWriteExt},
     task::{self, JoinHandle},
 };
 
@@ -70,4 +71,15 @@ pub fn spawn_timed_task<
         );
         result
     })())
+}
+
+pub async fn write_datapoint<W: AsyncWrite + Unpin, const N: usize>(
+    output: &mut W,
+    datapoint: [Float; N],
+) {
+    for i in datapoint {
+        let buf = format!("{i}, ");
+        output.write_all(buf.as_bytes()).await.unwrap()
+    }
+    output.write_all(b"\n").await.unwrap();
 }

@@ -1,5 +1,5 @@
 use fysik3_simulering::{
-    euler_cromer::EulerCromerSolver, spawn_timed_task, Float, FreeFallObject,
+    euler_cromer::EulerCromerSolver, spawn_timed_task, write_datapoint, Float, FreeFallObject,
     FreeFallObjectSnapshot, PhysicsSystemSolver,
 };
 use lazy_static::lazy_static;
@@ -110,14 +110,12 @@ pub async fn run_simulation<W: AsyncWrite + Unpin>(
         let step_size = num_datapoints as f32 / NUM_DATAPOINTS as f32;
 
         while let Some(datapoint) = datapoints.get(index as usize) {
-            let buf = format!("{}, {}, {}\n", datapoint[0], datapoint[1], datapoint[2]);
-            output_writer.write_all(buf.as_bytes()).await.unwrap();
+            write_datapoint(&mut output_writer, *datapoint).await;
             index += step_size;
         }
     } else {
         for datapoint in datapoints {
-            let buf = format!("{}, {}, {}\n", datapoint[0], datapoint[1], datapoint[2]);
-            output_writer.write_all(buf.as_bytes()).await.unwrap();
+            write_datapoint(&mut output_writer, datapoint).await;
         }
     }
 

@@ -5,6 +5,8 @@ use uppgift_1::uppgift_1;
 use uppgift_2::uppgift_2;
 use uppgift_3::uppgift_3;
 
+use crate::uppgift_extra_2::uppgift_extra_2;
+
 mod uppgift_1;
 mod uppgift_2;
 mod uppgift_3;
@@ -19,10 +21,11 @@ fn main() {
 }
 
 async fn async_main() {
-    let (a, b, c) = join!(
+    let (a, b, c, d) = join!(
         spawn_timed_task("uppgift 1", uppgift_1),
         spawn_timed_task("uppgift 2", uppgift_2),
-        spawn_timed_task("uppgift 3", uppgift_3)
+        spawn_timed_task("uppgift 3", uppgift_3),
+        spawn_timed_task("uppgift extra 2", uppgift_extra_2),
     );
-    [a, b, c].into_iter().for_each(|x| x.unwrap());
+    [a, b, c, d].into_iter().for_each(|x| x.unwrap());
 }
