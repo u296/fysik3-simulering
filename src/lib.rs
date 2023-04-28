@@ -77,9 +77,9 @@ pub async fn write_datapoint<W: AsyncWrite + Unpin, const N: usize>(
     output: &mut W,
     datapoint: [Float; N],
 ) {
-    for i in datapoint {
-        let buf = format!("{i}, ");
-        output.write_all(buf.as_bytes()).await.unwrap()
-    }
-    output.write_all(b"\n").await.unwrap();
+    let buf = format!(
+        "{}\n",
+        datapoint.map(|x| ToString::to_string(&x)).join(", ")
+    );
+    output.write_all(buf.as_bytes()).await.unwrap();
 }
