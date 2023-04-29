@@ -134,7 +134,7 @@ pub async fn uppgift1_run_simulation<W: AsyncWrite + Unpin + Send>(
         }
 
         fn column_names() -> [&'static str; 3] {
-            ["t", "x", "y"]
+            ["t (s)", "x (m)", "y (m)"]
         }
 
         fn should_end(

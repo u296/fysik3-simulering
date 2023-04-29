@@ -89,13 +89,13 @@ pub async fn uppgift_extra_2_run_simulation<W: AsyncWrite + Unpin + Send>(
 
     struct UppgE2Data;
 
-    impl Data<3, 9, AppliedDynamics<3>, ()> for UppgE2Data {
+    impl Data<3, 10, AppliedDynamics<3>, ()> for UppgE2Data {
         fn new_datapoint(
             time: Float,
             object: &FreeFallObjectSnapshot<3>,
             applied: &AppliedDynamics<3>,
             _: &(),
-        ) -> [Float; 9] {
+        ) -> [Float; 10] {
             let kinetic = 0.5 * object.mass * object.velocity.magnitude_squared();
             let potential = object.mass * object.position[1] * 9.82;
 
@@ -108,23 +108,25 @@ pub async fn uppgift_extra_2_run_simulation<W: AsyncWrite + Unpin + Send>(
                 object.position.z,
                 energy,
                 object.velocity.x,
+                object.velocity.y,
                 object.velocity.z,
                 object.angular_velocity.magnitude(),
                 applied.angular_acceleration.magnitude(),
             ]
         }
 
-        fn column_names() -> [&'static str; 9] {
+        fn column_names() -> [&'static str; 10] {
             [
-                "t",
-                "x",
-                "y",
-                "z",
-                "translational mechanical energy",
-                "vx",
-                "vz",
-                "omega",
-                "tau",
+                "t (s)",
+                "x (m)",
+                "y (m)",
+                "z (m)",
+                "translationell mekanisk energi (J)",
+                "vx (m/s)",
+                "vy (m/s)",
+                "vz (m/s)",
+                "omega (rad/s)",
+                "tau (Nm)",
             ]
         }
 
@@ -132,12 +134,12 @@ pub async fn uppgift_extra_2_run_simulation<W: AsyncWrite + Unpin + Send>(
             time: Float,
             object: &FreeFallObjectSnapshot<3>,
             _: &AppliedDynamics<3>,
-            _: &[[Float; 9]],
+            _: &[[Float; 10]],
             _: &(),
         ) -> bool {
             object.position.y < 0.0 || time > 10.0
         }
     }
 
-    run_simulation::<UppgE2Data, 3, 9, _, _, _>(solver, (), output).await;
+    run_simulation::<UppgE2Data, 3, 10, _, _, _>(solver, (), output).await;
 }

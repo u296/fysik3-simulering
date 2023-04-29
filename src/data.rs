@@ -41,6 +41,10 @@ pub trait Data<const D: usize, const N: usize, AppliedType, UserType> {
                 write_datapoint(&mut output_writer, *datapoint).await;
                 index += step_size;
             }
+
+            if index as usize != data.len() - 1 {
+                write_datapoint(&mut output_writer, *data.last().unwrap()).await;
+            }
         } else {
             for datapoint in data {
                 write_datapoint(&mut output_writer, *datapoint).await;

@@ -88,7 +88,13 @@ pub async fn uppgift_extra_1_run_simulation<
         }
 
         fn column_names() -> [&'static str; 5] {
-            ["t", "x", "v", "a", "E mech"]
+            [
+                "t (s)",
+                "x (m)",
+                "v (m/s)",
+                "a (m/s²)",
+                "mekanisk energi (J)",
+            ]
         }
 
         fn should_end(
