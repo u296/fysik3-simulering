@@ -24,7 +24,7 @@ pub async fn uppgift_extra_2() {
             35.0f64.to_radians().sin() * 40.0,
             0.0
         ],
-        angular_velocity: vector![0.0, 0.0, -5.0],
+        angular_velocity: vector![0.0, 0.0, 5.0],
     };
 
     let air_resistance_params = AirResistanceParameters {

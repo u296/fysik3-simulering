@@ -66,5 +66,5 @@ pub fn magnus_effect<const D: usize>(
         * o.velocity.magnitude()
         * o.angular_velocity.magnitude()
         * radius
-        * o.velocity.cross(&o.angular_velocity).normalize()
+        * o.angular_velocity.cross(&o.velocity).normalize()
 }
