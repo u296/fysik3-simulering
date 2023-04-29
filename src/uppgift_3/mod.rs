@@ -11,8 +11,10 @@ mod prelude {
 }
 
 use fysik3_simulering::{
-    data::Data, solver::SingleObjectPhysicsSystemSolver, spawn_timed_task, AppliedDynamics, Float,
-    ForceFunction, FreeFallObject,
+    data::Data,
+    forces::{fluid_resistance, spring_force},
+    solver::SingleObjectPhysicsSystemSolver,
+    spawn_timed_task, AppliedDynamics, Float, FreeFallObject,
 };
 use prelude::*;
 use tokio::{io::AsyncWrite, join};
@@ -21,18 +23,15 @@ use del_a::uppgift_a;
 use del_c::uppgift_c;
 use del_d::uppgift_d;
 use del_e::uppgift_e;
-use uppgift_extra_b::uppgift_extra_b;
-use uppgift_extra_c::uppgift_extra_c;
 
 mod del_a;
 mod del_c;
 mod del_d;
 mod del_e;
-mod uppgift_extra_b;
-mod uppgift_extra_c;
 
 pub const DEFAULT_INIT_SNAPSHOT: FreeFallObjectSnapshot<2> = FreeFallObjectSnapshot {
     mass: 1.0,
+    moment_of_inertia: 0.0,
     frontal_area: 0.0,
     volume: 0.0,
     position: vector![10.0, 0.0],
@@ -42,17 +41,13 @@ pub const DEFAULT_INIT_SNAPSHOT: FreeFallObjectSnapshot<2> = FreeFallObjectSnaps
 pub const DEFAULT_K: Float = 100.0;
 
 pub async fn uppgift_3() {
-    let (a, c, d, e, extra_b, extra_c) = join!(
+    let (a, c, d, e) = join!(
         spawn_timed_task("3-a", uppgift_a),
         spawn_timed_task("3-c", uppgift_c),
         spawn_timed_task("3-d", uppgift_d),
         spawn_timed_task("3-e", uppgift_e),
-        spawn_timed_task("3-extra-b", uppgift_extra_b),
-        spawn_timed_task("3-extra-c", uppgift_extra_c),
     );
-    [a, c, d, e, extra_b, extra_c]
-        .into_iter()
-        .for_each(|x| x.unwrap());
+    [a, c, d, e].into_iter().for_each(|x| x.unwrap());
 }
 
 pub async fn uppgift3_run_simulation<
@@ -66,11 +61,17 @@ pub async fn uppgift3_run_simulation<
     output: &mut W,
     solver_new: impl Fn(FreeFallObject<2>, Float) -> P,
 ) {
-    let forces: Vec<ForceFunction<2>> = vec![
-        Box::new(move |o| o.position * -k),
-        Box::new(move |o| o.velocity * -r),
-    ];
-
+    let solver = solver_new(
+        FreeFallObject {
+            snapshot: init_snapshot,
+            forces: vec![
+                Box::new(move |o| spring_force(o, k)),
+                Box::new(move |o| fluid_resistance(o, r)),
+            ],
+            torques: vec![],
+        },
+        dt,
+    );
     struct Uppg3Data;
 
     impl Data<2, 5, AppliedDynamics<2>, Float> for Uppg3Data {
@@ -107,6 +108,5 @@ pub async fn uppgift3_run_simulation<
         }
     }
 
-    run_simulation::<Uppg3Data, 2, 5, _, _, _, _>(solver_new, init_snapshot, forces, dt, k, output)
-        .await;
+    run_simulation::<Uppg3Data, 2, 5, _, _, _>(solver, k, output).await;
 }

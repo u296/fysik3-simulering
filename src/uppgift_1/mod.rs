@@ -1,15 +1,20 @@
 use fysik3_simulering::{
-    data::Data, simulation::run_simulation, solver::EulerCromerSolver, AppliedDynamics, Float,
-    ForceFunction, FreeFallObjectSnapshot,
+    data::Data,
+    forces::{air_resistance, gravity},
+    simulation::run_simulation,
+    solver::EulerCromerSolver,
+    AppliedDynamics, Float, FreeFallObjectSnapshot,
 };
 use lazy_static::lazy_static;
 use nalgebra::vector;
 use tokio::join;
 
 mod prelude {
-    pub use super::{uppgift1_run_simulation, AirResistanceParameters};
+    pub use super::uppgift1_run_simulation;
+
     pub use fysik3_simulering::{
-        ensure_dir_exists, spawn_timed_task, Float, FreeFallObject, FreeFallObjectSnapshot,
+        ensure_dir_exists, forces::AirResistanceParameters, spawn_timed_task, Float,
+        FreeFallObject, FreeFallObjectSnapshot,
     };
     pub use nalgebra::{vector, Vector2};
     pub use std::{io::Write, path::Path};
@@ -27,6 +32,7 @@ mod del_g;
 lazy_static! {
     static ref BALL_SNAPSHOT: FreeFallObjectSnapshot<2> = FreeFallObjectSnapshot {
         mass: 0.4,
+        moment_of_inertia: 0.0,
         frontal_area: 0.01 * std::f64::consts::PI,
         volume: 0.0,
         position: vector![0.0, 0.0],
@@ -66,6 +72,7 @@ anger följande information om flygplanet:
         let knots_to_mps = 0.51444;
         FreeFallObjectSnapshot {
             mass: 347450.0,
+            moment_of_inertia: 0.0,
             frontal_area: 245.5,
             volume: 0.0,
             position: vector![0.0, 10.0],
@@ -96,31 +103,23 @@ pub async fn uppgift_1() {
     [b, c, d, e, f, g].into_iter().for_each(|x| x.unwrap());
 }
 
-#[derive(Clone, Copy)]
-pub struct AirResistanceParameters {
-    pub c_d: Float,
-    pub rho: Float,
-}
-
 pub async fn uppgift1_run_simulation<W: AsyncWrite + Unpin + Send>(
     initial_snapshot: FreeFallObjectSnapshot<2>,
     air_resistance_params: AirResistanceParameters,
     dt: Float,
     output: &mut W,
 ) {
-    const G: Float = 9.82;
-
-    let forces: Vec<ForceFunction<2>> = vec![
-        Box::new(move |o| o.mass * G * vector![0.0, -1.0]),
-        Box::new(move |o| {
-            0.5 * air_resistance_params.c_d
-                * air_resistance_params.rho
-                * o.frontal_area
-                * -1.0
-                * o.velocity
-                * o.velocity.magnitude()
-        }),
-    ];
+    let solver = EulerCromerSolver::new(
+        FreeFallObject {
+            snapshot: initial_snapshot,
+            forces: vec![
+                Box::new(gravity),
+                Box::new(move |o| air_resistance(o, air_resistance_params)),
+            ],
+            torques: vec![],
+        },
+        dt,
+    );
 
     struct Uppg1Data;
 
@@ -149,13 +148,5 @@ pub async fn uppgift1_run_simulation<W: AsyncWrite + Unpin + Send>(
         }
     }
 
-    run_simulation::<Uppg1Data, 2, 3, _, _, _, _>(
-        EulerCromerSolver::<2>::new,
-        initial_snapshot,
-        forces,
-        dt,
-        (),
-        output,
-    )
-    .await;
+    run_simulation::<Uppg1Data, 2, 3, _, _, _>(solver, (), output).await;
 }

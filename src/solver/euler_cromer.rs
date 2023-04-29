@@ -2,7 +2,7 @@ use nalgebra::SVector;
 
 use crate::{AppliedDynamics, Float, FreeFallObject};
 
-use super::{PhysicsSystemSolver, SingleObjectPhysicsSystemSolver};
+use super::{PhysicsSystemSolver, SingleObjectPhysicsSystemSolver, Step};
 
 pub struct EulerCromerSolver<const D: usize> {
     pub object: FreeFallObject<D>,
@@ -17,18 +17,19 @@ impl<const D: usize> EulerCromerSolver<D> {
 
 impl<const D: usize> PhysicsSystemSolver for EulerCromerSolver<D> {
     type Applied = AppliedDynamics<D>;
-    fn step_forward(&mut self) -> AppliedDynamics<D> {
+    fn step_forward(&mut self) -> Step<AppliedDynamics<D>> {
         let applied = self.get_applied();
-        let force = applied.force;
-        let acceleration = applied.acceleration;
 
         //euler cromers method
 
-        self.object.snapshot.velocity += acceleration * self.dt;
+        self.object.snapshot.velocity += applied.acceleration * self.dt;
         self.object.snapshot.position += self.object.snapshot.velocity * self.dt;
-        AppliedDynamics {
-            force,
-            acceleration,
+
+        self.object.snapshot.angular_velocity += applied.angular_acceleration * self.dt;
+
+        Step {
+            time: self.dt,
+            applied,
         }
     }
     fn get_applied(&self) -> Self::Applied {
@@ -38,12 +39,21 @@ impl<const D: usize> PhysicsSystemSolver for EulerCromerSolver<D> {
             .iter()
             .map(|f| f(&self.object.snapshot))
             .sum();
+        let torque: SVector<Float, D> = self
+            .object
+            .torques
+            .iter()
+            .map(|f| f(&self.object.snapshot))
+            .sum();
 
         let acceleration = force / self.object.snapshot.mass;
+        let angular_acceleration = torque / self.object.snapshot.moment_of_inertia;
 
         AppliedDynamics {
             force,
             acceleration,
+            torque,
+            angular_acceleration,
         }
     }
 

@@ -1,6 +1,9 @@
 use fysik3_simulering::{
-    data::Data, simulation::run_simulation, solver::EulerCromerSolver, spawn_timed_task,
-    AppliedDynamics, Float, ForceFunction, FreeFallObjectSnapshot,
+    data::Data,
+    forces::{buoyancy, fluid_resistance, gravity},
+    simulation::run_simulation,
+    solver::EulerCromerSolver,
+    spawn_timed_task, AppliedDynamics, Float, FreeFallObject, FreeFallObjectSnapshot,
 };
 use lazy_static::lazy_static;
 use nalgebra::vector;
@@ -26,6 +29,7 @@ const DEFAULT_BALL_RADIUS: Float = 0.01;
 lazy_static! {
     pub static ref DEFAULT_BALL: FreeFallObjectSnapshot<2> = FreeFallObjectSnapshot {
         mass: 0.5,
+        moment_of_inertia: 0.0,
         frontal_area: DEFAULT_BALL_RADIUS.powi(2) * std::f64::consts::PI,
         volume: std::f64::consts::PI * 4.0 * DEFAULT_BALL_RADIUS.powi(3) / 3.0,
         position: vector![0.0, 0.0],
@@ -56,13 +60,18 @@ pub async fn uppgift2_run_simulation<W: AsyncWrite + Unpin + Send>(
     dt: Float,
     output: &mut W,
 ) {
-    let g = 9.82;
-
-    let forces: Vec<ForceFunction<2>> = vec![
-        Box::new(move |object| vector![0.0, -1.0] * object.mass * g),
-        Box::new(move |object| vector![0.0, 1.0] * rho * g * object.volume),
-        Box::new(move |object| -object.velocity * r),
-    ];
+    let solver = EulerCromerSolver::new(
+        FreeFallObject {
+            snapshot: init_snapshot,
+            forces: vec![
+                Box::new(gravity),
+                Box::new(move |o| buoyancy(o, rho)),
+                Box::new(move |o| fluid_resistance(o, r)),
+            ],
+            torques: vec![],
+        },
+        dt,
+    );
 
     struct Uppg2Data;
 
@@ -91,13 +100,5 @@ pub async fn uppgift2_run_simulation<W: AsyncWrite + Unpin + Send>(
         }
     }
 
-    run_simulation::<Uppg2Data, 2, 3, _, _, _, _>(
-        EulerCromerSolver::<2>::new,
-        init_snapshot,
-        forces,
-        dt,
-        (),
-        output,
-    )
-    .await;
+    run_simulation::<Uppg2Data, 2, 3, _, _, _>(solver, (), output).await;
 }

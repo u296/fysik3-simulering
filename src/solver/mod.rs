@@ -6,9 +6,14 @@ mod euler_cromer;
 pub use euler::EulerSolver;
 pub use euler_cromer::EulerCromerSolver;
 
+pub struct Step<T> {
+    pub time: Float,
+    pub applied: T,
+}
+
 pub trait PhysicsSystemSolver {
     type Applied;
-    fn step_forward(&mut self) -> Self::Applied;
+    fn step_forward(&mut self) -> Step<Self::Applied>;
     fn get_applied(&self) -> Self::Applied;
     fn get_dt(&self) -> Float;
 }

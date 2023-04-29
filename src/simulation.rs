@@ -1,9 +1,6 @@
 use tokio::io::AsyncWrite;
 
-use crate::{
-    data::Data, solver::SingleObjectPhysicsSystemSolver, Float, ForceFunction, FreeFallObject,
-    FreeFallObjectSnapshot,
-};
+use crate::{data::Data, solver::SingleObjectPhysicsSystemSolver};
 
 pub async fn run_simulation<
     DataType: Data<D, N, Solver::Applied, UserType> + Send,
@@ -11,24 +8,12 @@ pub async fn run_simulation<
     const N: usize,
     UserType,
     Solver: SingleObjectPhysicsSystemSolver<D>,
-    SolverNewFn: Fn(FreeFallObject<D>, Float) -> Solver,
     Output: AsyncWrite + Unpin + Send,
 >(
-    solver_new: SolverNewFn,
-    initial_snapshot: FreeFallObjectSnapshot<D>,
-    forces: Vec<ForceFunction<D>>,
-    dt: Float,
+    mut solver: Solver,
     user: UserType,
     output: &mut Output,
 ) {
-    let mut solver = solver_new(
-        FreeFallObject {
-            snapshot: initial_snapshot,
-            forces,
-        },
-        dt,
-    );
-
     let mut t = 0.0;
     let mut datapoints = Vec::new();
 
@@ -43,8 +28,7 @@ pub async fn run_simulation<
             break;
         }
 
-        solver.step_forward();
-        t += dt;
+        t += solver.step_forward().time;
     }
 
     DataType::write_data(&datapoints, output).await;

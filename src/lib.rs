@@ -7,17 +7,22 @@ use tokio::{
 };
 
 pub mod data;
+pub mod forces;
 pub mod simulation;
 pub mod solver;
+pub mod torques;
 
 pub type Float = f64;
 
 pub type ForceFunction<const D: usize> =
     Box<dyn 'static + Send + Fn(&FreeFallObjectSnapshot<D>) -> SVector<Float, D>>;
+pub type TorqueFunction<const D: usize> =
+    Box<dyn 'static + Send + Fn(&FreeFallObjectSnapshot<D>) -> SVector<Float, D>>;
 
 #[derive(Debug, Clone, Copy)]
 pub struct FreeFallObjectSnapshot<const D: usize> {
     pub mass: Float,
+    pub moment_of_inertia: Float,
     pub frontal_area: Float,
     pub volume: Float,
     pub position: SVector<Float, D>,
@@ -28,11 +33,14 @@ pub struct FreeFallObjectSnapshot<const D: usize> {
 pub struct FreeFallObject<const D: usize> {
     pub snapshot: FreeFallObjectSnapshot<D>,
     pub forces: Vec<ForceFunction<D>>,
+    pub torques: Vec<TorqueFunction<D>>,
 }
 
 pub struct AppliedDynamics<const D: usize> {
     pub force: SVector<Float, D>,
     pub acceleration: SVector<Float, D>,
+    pub torque: SVector<Float, D>,
+    pub angular_acceleration: SVector<Float, D>,
 }
 
 pub async fn ensure_dir_exists(p: impl AsRef<Path>) {

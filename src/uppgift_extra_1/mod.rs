@@ -1,7 +1,9 @@
 use fysik3_simulering::{
-    data::Data, simulation::run_simulation, solver::SingleObjectPhysicsSystemSolver,
-    spawn_timed_task, AppliedDynamics, Float, ForceFunction, FreeFallObject,
-    FreeFallObjectSnapshot,
+    data::Data,
+    forces::{fluid_resistance, spring_force},
+    simulation::run_simulation,
+    solver::SingleObjectPhysicsSystemSolver,
+    spawn_timed_task, AppliedDynamics, Float, FreeFallObject, FreeFallObjectSnapshot,
 };
 use nalgebra::vector;
 use prelude::*;
@@ -24,6 +26,7 @@ mod del_c;
 
 pub const DEFAULT_INIT_SNAPSHOT: FreeFallObjectSnapshot<2> = FreeFallObjectSnapshot {
     mass: 1.0,
+    moment_of_inertia: 0.0,
     frontal_area: 0.0,
     volume: 0.0,
     position: vector![10.0, 0.0],
@@ -51,10 +54,17 @@ pub async fn uppgift_extra_1_run_simulation<
     output: &mut W,
     solver_new: impl Fn(FreeFallObject<2>, Float) -> P,
 ) {
-    let forces: Vec<ForceFunction<2>> = vec![
-        Box::new(move |o| o.position * -k),
-        Box::new(move |o| o.velocity * -r),
-    ];
+    let solver = solver_new(
+        FreeFallObject {
+            snapshot: init_snapshot,
+            forces: vec![
+                Box::new(move |o| spring_force(o, k)),
+                Box::new(move |o| fluid_resistance(o, r)),
+            ],
+            torques: vec![],
+        },
+        dt,
+    );
 
     struct UppgE1Data;
 
@@ -92,13 +102,5 @@ pub async fn uppgift_extra_1_run_simulation<
         }
     }
 
-    run_simulation::<UppgE1Data, 2, 5, _, _, _, _>(
-        solver_new,
-        init_snapshot,
-        forces,
-        dt,
-        k,
-        output,
-    )
-    .await;
+    run_simulation::<UppgE1Data, 2, 5, _, _, _>(solver, k, output).await;
 }
