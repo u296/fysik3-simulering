@@ -1,6 +1,6 @@
 use fysik3_simulering::{
-    euler_cromer::EulerCromerSolver, run_simulation, AppliedDynamics, Data, Float, ForceFunction,
-    FreeFallObjectSnapshot,
+    data::Data, simulation::run_simulation, solver::EulerCromerSolver, AppliedDynamics, Float,
+    ForceFunction, FreeFallObjectSnapshot,
 };
 use lazy_static::lazy_static;
 use nalgebra::vector;
@@ -10,7 +10,6 @@ mod prelude {
     pub use super::{uppgift1_run_simulation, AirResistanceParameters};
     pub use fysik3_simulering::{
         ensure_dir_exists, spawn_timed_task, Float, FreeFallObject, FreeFallObjectSnapshot,
-        PhysicsSystemSolver,
     };
     pub use nalgebra::{vector, Vector2};
     pub use std::{io::Write, path::Path};
@@ -103,7 +102,7 @@ pub struct AirResistanceParameters {
     pub rho: Float,
 }
 
-pub async fn uppgift1_run_simulation<W: AsyncWrite + Unpin>(
+pub async fn uppgift1_run_simulation<W: AsyncWrite + Unpin + Send>(
     initial_snapshot: FreeFallObjectSnapshot<2>,
     air_resistance_params: AirResistanceParameters,
     dt: Float,

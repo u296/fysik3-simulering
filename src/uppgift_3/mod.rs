@@ -1,16 +1,18 @@
 mod prelude {
     pub use super::{uppgift3_run_simulation, DEFAULT_INIT_SNAPSHOT, DEFAULT_K};
     pub use fysik3_simulering::{
-        ensure_dir_exists, euler::EulerSolver, euler_cromer::EulerCromerSolver,
-        FreeFallObjectSnapshot, PhysicsSystemSolver,
+        ensure_dir_exists,
+        simulation::run_simulation,
+        solver::{EulerCromerSolver, EulerSolver},
+        FreeFallObjectSnapshot,
     };
     pub use nalgebra::vector;
     pub use tokio::fs::File;
 }
 
 use fysik3_simulering::{
-    run_simulation, spawn_timed_task, AppliedDynamics, Data, Float, ForceFunction, FreeFallObject,
-    SingleObjectPhysicsSystemSolver,
+    data::Data, solver::SingleObjectPhysicsSystemSolver, spawn_timed_task, AppliedDynamics, Float,
+    ForceFunction, FreeFallObject,
 };
 use prelude::*;
 use tokio::{io::AsyncWrite, join};
@@ -54,7 +56,7 @@ pub async fn uppgift_3() {
 }
 
 pub async fn uppgift3_run_simulation<
-    W: Unpin + AsyncWrite,
+    W: Unpin + AsyncWrite + Send,
     P: SingleObjectPhysicsSystemSolver<2, Applied = AppliedDynamics<2>>,
 >(
     init_snapshot: FreeFallObjectSnapshot<2>,

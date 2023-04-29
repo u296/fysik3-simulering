@@ -1,6 +1,6 @@
 use fysik3_simulering::{
-    euler_cromer::EulerCromerSolver, run_simulation, spawn_timed_task, AppliedDynamics, Data,
-    Float, ForceFunction, FreeFallObjectSnapshot,
+    data::Data, simulation::run_simulation, solver::EulerCromerSolver, spawn_timed_task,
+    AppliedDynamics, Float, ForceFunction, FreeFallObjectSnapshot,
 };
 use lazy_static::lazy_static;
 use nalgebra::vector;
@@ -8,9 +8,7 @@ use tokio::{io::AsyncWrite, join};
 
 mod prelude {
     pub use super::{uppgift2_run_simulation, DEFAULT_BALL, DEFAULT_R, HONEY_RHO, OIL_RHO};
-    pub use fysik3_simulering::{
-        ensure_dir_exists, Float, FreeFallObject, FreeFallObjectSnapshot, PhysicsSystemSolver,
-    };
+    pub use fysik3_simulering::{ensure_dir_exists, Float, FreeFallObject, FreeFallObjectSnapshot};
     pub use nalgebra::{vector, Vector2};
     pub use std::{io::Write, path::Path, time::Instant};
     pub use tokio::{fs::File, io::AsyncWrite};
@@ -51,7 +49,7 @@ pub async fn uppgift_2() {
     [a, b, c, d, e].into_iter().for_each(|x| x.unwrap());
 }
 
-pub async fn uppgift2_run_simulation<W: AsyncWrite + Unpin>(
+pub async fn uppgift2_run_simulation<W: AsyncWrite + Unpin + Send>(
     init_snapshot: FreeFallObjectSnapshot<2>,
     r: Float,
     rho: Float,

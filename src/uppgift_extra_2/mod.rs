@@ -1,6 +1,6 @@
 use fysik3_simulering::{
-    ensure_dir_exists, euler_cromer::EulerCromerSolver, run_simulation, AppliedDynamics, Data,
-    Float, ForceFunction, FreeFallObjectSnapshot,
+    data::Data, ensure_dir_exists, simulation::run_simulation, solver::EulerCromerSolver,
+    AppliedDynamics, Float, ForceFunction, FreeFallObjectSnapshot,
 };
 use nalgebra::vector;
 use tokio::{fs::File, io::AsyncWrite};
@@ -34,7 +34,7 @@ pub async fn uppgift_extra_2() {
     uppgift_extra_2_run_simulation(init, air_resistance_params, radius, 0.01, &mut output).await;
 }
 
-pub async fn uppgift_extra_2_run_simulation<W: AsyncWrite + Unpin>(
+pub async fn uppgift_extra_2_run_simulation<W: AsyncWrite + Unpin + Send>(
     initial_snapshot: FreeFallObjectSnapshot<3>,
     air_resistance_params: AirResistanceParameters,
     radius: Float,
