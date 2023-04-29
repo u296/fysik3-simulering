@@ -1,6 +1,8 @@
 use nalgebra::SVector;
 
-use crate::{Float, FreeFallObject, PhysicsSystemSolver, SingleObjectPhysicsSystemSolver, Step};
+use crate::{
+    AppliedDynamics, Float, FreeFallObject, PhysicsSystemSolver, SingleObjectPhysicsSystemSolver,
+};
 
 pub struct EulerCromerSolver<const D: usize> {
     pub object: FreeFallObject<D>,
@@ -14,8 +16,8 @@ impl<const D: usize> EulerCromerSolver<D> {
 }
 
 impl<const D: usize> PhysicsSystemSolver for EulerCromerSolver<D> {
-    type Applied = Step<D>;
-    fn step_forward(&mut self) -> Step<D> {
+    type Applied = AppliedDynamics<D>;
+    fn step_forward(&mut self) -> AppliedDynamics<D> {
         let applied = self.get_applied();
         let force = applied.force;
         let acceleration = applied.acceleration;
@@ -24,7 +26,7 @@ impl<const D: usize> PhysicsSystemSolver for EulerCromerSolver<D> {
 
         self.object.snapshot.velocity += acceleration * self.dt;
         self.object.snapshot.position += self.object.snapshot.velocity * self.dt;
-        Step {
+        AppliedDynamics {
             force,
             acceleration,
         }
@@ -39,7 +41,7 @@ impl<const D: usize> PhysicsSystemSolver for EulerCromerSolver<D> {
 
         let acceleration = force / self.object.snapshot.mass;
 
-        Step {
+        AppliedDynamics {
             force,
             acceleration,
         }
@@ -51,7 +53,7 @@ impl<const D: usize> PhysicsSystemSolver for EulerCromerSolver<D> {
 }
 
 impl<const D: usize> SingleObjectPhysicsSystemSolver<D> for EulerCromerSolver<D> {
-    fn get_object<'a>(&'a self) -> &'a FreeFallObject<D> {
+    fn get_object(&self) -> &FreeFallObject<D> {
         &self.object
     }
 }

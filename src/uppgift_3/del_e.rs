@@ -17,11 +17,11 @@ pub async fn uppgift_e() {
     let tasks: Vec<_> = values
         .into_iter()
         .map(|r| {
-            tokio::spawn((move || async move {
+            tokio::spawn(async move {
                 let mut output = File::create(&format!("uppgifter/3/e/r-{r}.csv"))
                     .await
                     .unwrap();
-                run_simulation(
+                uppgift3_run_simulation(
                     DEFAULT_INIT_SNAPSHOT,
                     DEFAULT_K,
                     r,
@@ -30,7 +30,7 @@ pub async fn uppgift_e() {
                     EulerCromerSolver::new,
                 )
                 .await;
-            })())
+            })
         })
         .collect();
 

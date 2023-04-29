@@ -9,6 +9,6 @@ pub async fn uppgift_b() {
         let mut output_file = File::create(&format!("uppgifter/2/b/dt-{dt}.csv"))
             .await
             .unwrap();
-        run_simulation(*DEFAULT_BALL, DEFAULT_R, HONEY_RHO, 0.01, &mut output_file).await;
+        uppgift2_run_simulation(*DEFAULT_BALL, DEFAULT_R, HONEY_RHO, 0.01, &mut output_file).await;
     }
 }

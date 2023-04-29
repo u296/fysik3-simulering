@@ -4,7 +4,7 @@ pub async fn uppgift_c() {
     ensure_dir_exists("uppgifter/3/c").await;
 
     let mut output = File::create("uppgifter/3/c/results.csv").await.unwrap();
-    run_simulation(
+    uppgift3_run_simulation(
         DEFAULT_INIT_SNAPSHOT,
         DEFAULT_K,
         1.0,

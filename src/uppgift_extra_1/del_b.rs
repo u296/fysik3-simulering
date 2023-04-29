@@ -1,7 +1,7 @@
 use super::prelude::*;
 
-pub async fn uppgift_extra_b() {
-    ensure_dir_exists("uppgifter/3/extra/b").await;
+pub async fn uppgift_b() {
+    ensure_dir_exists("uppgifter/extra_1/b").await;
 
     let values = vec![0.0001, 0.001, 0.01, 0.1, 1.0];
 
@@ -9,10 +9,10 @@ pub async fn uppgift_extra_b() {
         .into_iter()
         .map(|dt| {
             tokio::spawn(async move {
-                let mut output = File::create(&format!("uppgifter/3/extra/b/dt-{dt}.csv"))
+                let mut output = File::create(&format!("uppgifter/extra_1/b/dt-{dt}.csv"))
                     .await
                     .unwrap();
-                uppgift3_run_simulation(
+                uppgift_extra_1_run_simulation(
                     DEFAULT_INIT_SNAPSHOT,
                     DEFAULT_K,
                     0.0,

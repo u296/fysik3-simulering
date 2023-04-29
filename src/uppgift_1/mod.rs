@@ -1,15 +1,13 @@
-use tokio::io::{AsyncWriteExt, BufWriter};
-
 use fysik3_simulering::{
-    euler_cromer::EulerCromerSolver, write_datapoint, Float, FreeFallObject,
-    FreeFallObjectSnapshot, PhysicsSystemSolver,
+    euler_cromer::EulerCromerSolver, run_simulation, AppliedDynamics, Data, Float, ForceFunction,
+    FreeFallObjectSnapshot,
 };
 use lazy_static::lazy_static;
 use nalgebra::vector;
 use tokio::join;
 
 mod prelude {
-    pub use super::{run_simulation, AirResistanceParameters};
+    pub use super::{uppgift1_run_simulation, AirResistanceParameters};
     pub use fysik3_simulering::{
         ensure_dir_exists, spawn_timed_task, Float, FreeFallObject, FreeFallObjectSnapshot,
         PhysicsSystemSolver,
@@ -26,8 +24,6 @@ mod del_d;
 mod del_e;
 mod del_f;
 mod del_g;
-
-const NUM_DATAPOINTS: usize = 2000;
 
 lazy_static! {
     static ref BALL_SNAPSHOT: FreeFallObjectSnapshot<2> = FreeFallObjectSnapshot {
@@ -107,67 +103,60 @@ pub struct AirResistanceParameters {
     pub rho: Float,
 }
 
-pub async fn run_simulation<W: AsyncWrite + Unpin>(
+pub async fn uppgift1_run_simulation<W: AsyncWrite + Unpin>(
     initial_snapshot: FreeFallObjectSnapshot<2>,
     air_resistance_params: AirResistanceParameters,
     dt: Float,
     output: &mut W,
 ) {
     const G: Float = 9.82;
-    let mut solver = EulerCromerSolver::new(
-        FreeFallObject {
-            snapshot: initial_snapshot,
-            forces: vec![
-                Box::new(move |o| o.mass * G * vector![0.0, -1.0]),
-                Box::new(move |o| {
-                    0.5 * air_resistance_params.c_d
-                        * air_resistance_params.rho
-                        * o.frontal_area
-                        * -1.0
-                        * o.velocity
-                        * o.velocity.magnitude()
-                }),
-            ],
-        },
+
+    let forces: Vec<ForceFunction<2>> = vec![
+        Box::new(move |o| o.mass * G * vector![0.0, -1.0]),
+        Box::new(move |o| {
+            0.5 * air_resistance_params.c_d
+                * air_resistance_params.rho
+                * o.frontal_area
+                * -1.0
+                * o.velocity
+                * o.velocity.magnitude()
+        }),
+    ];
+
+    struct Uppg1Data;
+
+    impl Data<2, 3, AppliedDynamics<2>, ()> for Uppg1Data {
+        fn new_datapoint(
+            time: Float,
+            object: &FreeFallObjectSnapshot<2>,
+            _: &AppliedDynamics<2>,
+            _: &(),
+        ) -> [Float; 3] {
+            [time, object.position[0], object.position[1]]
+        }
+
+        fn column_names() -> [&'static str; 3] {
+            ["t", "x", "y"]
+        }
+
+        fn should_end(
+            _: Float,
+            object: &FreeFallObjectSnapshot<2>,
+            _: &AppliedDynamics<2>,
+            _: &[[Float; 3]],
+            _: &(),
+        ) -> bool {
+            object.position.y < 0.0
+        }
+    }
+
+    run_simulation::<Uppg1Data, 2, 3, _, _, _, _>(
+        EulerCromerSolver::<2>::new,
+        initial_snapshot,
+        forces,
         dt,
-    );
-
-    let mut t = 0.0;
-    let mut datapoints = Vec::new();
-
-    loop {
-        datapoints.push([
-            t,
-            solver.object.snapshot.position[0],
-            solver.object.snapshot.position[1],
-        ]);
-
-        solver.step_forward();
-        t += dt;
-
-        if solver.object.snapshot.position.y < 0.0 {
-            break;
-        }
-    }
-
-    let mut output_writer = BufWriter::new(output);
-
-    output_writer.write_all(b"t,x,y\n").await.unwrap();
-
-    if datapoints.len() > NUM_DATAPOINTS {
-        let mut index = 0.0;
-
-        let step_size = datapoints.len() as f32 / NUM_DATAPOINTS as f32;
-
-        while let Some(datapoint) = datapoints.get(index as usize) {
-            write_datapoint(&mut output_writer, *datapoint).await;
-            index += step_size;
-        }
-    } else {
-        for datapoint in datapoints {
-            write_datapoint(&mut output_writer, datapoint).await;
-        }
-    }
-
-    output_writer.flush().await.unwrap()
+        (),
+        output,
+    )
+    .await;
 }

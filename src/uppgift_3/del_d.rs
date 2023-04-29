@@ -5,7 +5,7 @@ pub async fn uppgift_d() {
 
     {
         let mut output = File::create("uppgifter/3/d/svag.csv").await.unwrap();
-        run_simulation(
+        uppgift3_run_simulation(
             DEFAULT_INIT_SNAPSHOT,
             DEFAULT_K,
             2.0,
@@ -20,7 +20,7 @@ pub async fn uppgift_d() {
 
     {
         let mut output = File::create("uppgifter/3/d/stark.csv").await.unwrap();
-        run_simulation(
+        uppgift3_run_simulation(
             DEFAULT_INIT_SNAPSHOT,
             DEFAULT_K,
             50.0,

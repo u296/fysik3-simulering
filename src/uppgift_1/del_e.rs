@@ -9,7 +9,7 @@ pub async fn uppgift_e() {
         let mut output_file = File::create(&format!("uppgifter/1/e/dt-{dt}.csv"))
             .await
             .unwrap();
-        run_simulation(
+        uppgift1_run_simulation(
             *AIRCRAFT_SNAPSHOT,
             *AIRCRAFT_RESISTANCE,
             dt,

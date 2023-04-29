@@ -9,5 +9,5 @@ pub async fn uppgift_f() {
         ..*AIRCRAFT_RESISTANCE
     };
 
-    run_simulation(*AIRCRAFT_SNAPSHOT, air_resistance, 0.01, &mut output_file).await;
+    uppgift1_run_simulation(*AIRCRAFT_SNAPSHOT, air_resistance, 0.01, &mut output_file).await;
 }

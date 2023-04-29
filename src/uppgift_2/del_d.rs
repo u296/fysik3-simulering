@@ -15,6 +15,6 @@ pub async fn uppgift_d() {
             velocity: vector![0.0, init_velocity],
             ..*DEFAULT_BALL
         };
-        run_simulation(snapshot, DEFAULT_R, HONEY_RHO, 0.001, &mut output_file).await;
+        uppgift2_run_simulation(snapshot, DEFAULT_R, HONEY_RHO, 0.001, &mut output_file).await;
     }
 }

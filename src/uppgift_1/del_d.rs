@@ -9,7 +9,7 @@ pub async fn uppgift_d() {
         }
     };
 
-    run_simulation(
+    uppgift1_run_simulation(
         *AIRCRAFT_SNAPSHOT,
         *AIRCRAFT_RESISTANCE,
         0.01,

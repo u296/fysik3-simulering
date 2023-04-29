@@ -13,12 +13,13 @@ pub async fn uppgift_g() {
     let tasks: Vec<_> = vals
         .into_iter()
         .map(|dt| {
-            tokio::spawn((move || async move {
+            tokio::spawn(async move {
                 let mut output_file = File::create(&format!("uppgifter/1/g/dt-{dt}.csv"))
                     .await
                     .unwrap();
-                run_simulation(*AIRCRAFT_SNAPSHOT, air_resistance, dt, &mut output_file).await;
-            })())
+                uppgift1_run_simulation(*AIRCRAFT_SNAPSHOT, air_resistance, dt, &mut output_file)
+                    .await;
+            })
         })
         .collect();
 
