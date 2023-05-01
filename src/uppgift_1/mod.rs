@@ -3,7 +3,7 @@ use fysik3_simulering::{
     forces::{air_resistance, gravity},
     simulation::run_simulation,
     solver::EulerCromerSolver,
-    AppliedDynamics, Float, FreeFallObjectSnapshot,
+    AppliedDynamics, BodySnapshot, Float,
 };
 use lazy_static::lazy_static;
 use nalgebra::vector;
@@ -13,8 +13,8 @@ mod prelude {
     pub use super::uppgift1_run_simulation;
 
     pub use fysik3_simulering::{
-        ensure_dir_exists, forces::AirResistanceParameters, spawn_timed_task, Float,
-        FreeFallObject, FreeFallObjectSnapshot,
+        ensure_dir_exists, forces::AirResistanceParameters, spawn_timed_task, Body, BodySnapshot,
+        Float,
     };
     pub use nalgebra::{vector, Vector2};
     pub use std::{io::Write, path::Path};
@@ -30,7 +30,7 @@ mod del_f;
 mod del_g;
 
 lazy_static! {
-    static ref BALL_SNAPSHOT: FreeFallObjectSnapshot<2> = FreeFallObjectSnapshot {
+    static ref BALL_SNAPSHOT: BodySnapshot<2> = BodySnapshot {
         mass: 0.4,
         moment_of_inertia: 0.0,
         frontal_area: 0.01 * std::f64::consts::PI,
@@ -68,9 +68,9 @@ anger följande information om flygplanet:
     * lyfthastighet: 130-165 knop
  */
 
-    static ref AIRCRAFT_SNAPSHOT: FreeFallObjectSnapshot<2> = {
+    static ref AIRCRAFT_SNAPSHOT: BodySnapshot<2> = {
         let knots_to_mps = 0.51444;
-        FreeFallObjectSnapshot {
+        BodySnapshot {
             mass: 347450.0,
             moment_of_inertia: 0.0,
             frontal_area: 245.5,
@@ -104,13 +104,13 @@ pub async fn uppgift_1() {
 }
 
 pub async fn uppgift1_run_simulation<W: AsyncWrite + Unpin + Send>(
-    initial_snapshot: FreeFallObjectSnapshot<2>,
+    initial_snapshot: BodySnapshot<2>,
     air_resistance_params: AirResistanceParameters,
     dt: Float,
     output: &mut W,
 ) {
     let solver = EulerCromerSolver::new(
-        FreeFallObject {
+        Body {
             snapshot: initial_snapshot,
             forces: vec![
                 Box::new(gravity),
@@ -126,7 +126,7 @@ pub async fn uppgift1_run_simulation<W: AsyncWrite + Unpin + Send>(
     impl Data<2, 4, AppliedDynamics<2>, ()> for Uppg1Data {
         fn new_datapoint(
             time: Float,
-            object: &FreeFallObjectSnapshot<2>,
+            object: &BodySnapshot<2>,
             _: &AppliedDynamics<2>,
             _: &(),
         ) -> [Float; 4] {
@@ -144,7 +144,7 @@ pub async fn uppgift1_run_simulation<W: AsyncWrite + Unpin + Send>(
 
         fn should_end(
             _: Float,
-            object: &FreeFallObjectSnapshot<2>,
+            object: &BodySnapshot<2>,
             _: &AppliedDynamics<2>,
             _: &[[Float; 4]],
             _: &(),

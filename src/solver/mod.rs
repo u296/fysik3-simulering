@@ -1,4 +1,4 @@
-use crate::{Float, FreeFallObject};
+use crate::{Body, Float};
 
 mod euler;
 mod euler_cromer;
@@ -19,5 +19,5 @@ pub trait PhysicsSystemSolver {
 }
 
 pub trait SingleObjectPhysicsSystemSolver<const D: usize>: PhysicsSystemSolver {
-    fn get_object(&self) -> &FreeFallObject<D>;
+    fn get_object(&self) -> &Body<D>;
 }

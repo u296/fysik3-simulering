@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use tokio::io::{AsyncWrite, AsyncWriteExt, BufWriter};
 
-use crate::{Float, FreeFallObjectSnapshot};
+use crate::{BodySnapshot, Float};
 
 const MAX_DATAPOINTS: usize = 2000;
 
@@ -9,14 +9,14 @@ const MAX_DATAPOINTS: usize = 2000;
 pub trait Data<const D: usize, const N: usize, AppliedType, UserType> {
     fn new_datapoint(
         time: Float,
-        object: &FreeFallObjectSnapshot<D>,
+        object: &BodySnapshot<D>,
         applied: &AppliedType,
         user: &UserType,
     ) -> [Float; N];
     fn column_names() -> [&'static str; N];
     fn should_end(
         time: Float,
-        object: &FreeFallObjectSnapshot<D>,
+        object: &BodySnapshot<D>,
         applied: &AppliedType,
         current_data: &[[Float; N]],
         user: &UserType,

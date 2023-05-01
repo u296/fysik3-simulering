@@ -5,7 +5,7 @@ use fysik3_simulering::{
     simulation::run_simulation,
     solver::EulerCromerSolver,
     torques::air_resistance_torque,
-    AppliedDynamics, Float, FreeFallObject, FreeFallObjectSnapshot,
+    AppliedDynamics, Body, BodySnapshot, Float,
 };
 use nalgebra::vector;
 use tokio::{fs::File, io::AsyncWrite};
@@ -13,7 +13,7 @@ use tokio::{fs::File, io::AsyncWrite};
 pub const DEFAULT_RADIUS: Float = 0.1;
 
 pub async fn uppgift_extra_2() {
-    let init = FreeFallObjectSnapshot {
+    let init = BodySnapshot {
         mass: 0.4,
         moment_of_inertia: (2.0 / 5.0) * 0.4 * DEFAULT_RADIUS.powi(2),
         frontal_area: DEFAULT_RADIUS.powi(2) * std::f64::consts::PI,
@@ -66,14 +66,14 @@ pub async fn uppgift_extra_2() {
 }
 
 pub async fn uppgift_extra_2_run_simulation<W: AsyncWrite + Unpin + Send>(
-    initial_snapshot: FreeFallObjectSnapshot<3>,
+    initial_snapshot: BodySnapshot<3>,
     air_resistance_params: AirResistanceParameters,
     radius: Float,
     dt: Float,
     output: &mut W,
 ) {
     let solver = EulerCromerSolver::new(
-        FreeFallObject {
+        Body {
             snapshot: initial_snapshot,
             forces: vec![
                 Box::new(gravity), // gravity
@@ -92,7 +92,7 @@ pub async fn uppgift_extra_2_run_simulation<W: AsyncWrite + Unpin + Send>(
     impl Data<3, 10, AppliedDynamics<3>, ()> for UppgE2Data {
         fn new_datapoint(
             time: Float,
-            object: &FreeFallObjectSnapshot<3>,
+            object: &BodySnapshot<3>,
             applied: &AppliedDynamics<3>,
             _: &(),
         ) -> [Float; 10] {
@@ -132,7 +132,7 @@ pub async fn uppgift_extra_2_run_simulation<W: AsyncWrite + Unpin + Send>(
 
         fn should_end(
             time: Float,
-            object: &FreeFallObjectSnapshot<3>,
+            object: &BodySnapshot<3>,
             _: &AppliedDynamics<3>,
             _: &[[Float; 10]],
             _: &(),

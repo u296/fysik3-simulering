@@ -15,12 +15,12 @@ pub mod torques;
 pub type Float = f64;
 
 pub type ForceFunction<const D: usize> =
-    Box<dyn 'static + Send + Fn(&FreeFallObjectSnapshot<D>) -> SVector<Float, D>>;
+    Box<dyn 'static + Send + Fn(&BodySnapshot<D>) -> SVector<Float, D>>;
 pub type TorqueFunction<const D: usize> =
-    Box<dyn 'static + Send + Fn(&FreeFallObjectSnapshot<D>) -> SVector<Float, D>>;
+    Box<dyn 'static + Send + Fn(&BodySnapshot<D>) -> SVector<Float, D>>;
 
 #[derive(Debug, Clone, Copy)]
-pub struct FreeFallObjectSnapshot<const D: usize> {
+pub struct BodySnapshot<const D: usize> {
     pub mass: Float,
     pub moment_of_inertia: Float,
     pub frontal_area: Float,
@@ -30,8 +30,8 @@ pub struct FreeFallObjectSnapshot<const D: usize> {
     pub angular_velocity: SVector<Float, D>,
 }
 
-pub struct FreeFallObject<const D: usize> {
-    pub snapshot: FreeFallObjectSnapshot<D>,
+pub struct Body<const D: usize> {
+    pub snapshot: BodySnapshot<D>,
     pub forces: Vec<ForceFunction<D>>,
     pub torques: Vec<TorqueFunction<D>>,
 }

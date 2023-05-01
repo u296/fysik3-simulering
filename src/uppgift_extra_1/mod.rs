@@ -3,7 +3,7 @@ use fysik3_simulering::{
     forces::{fluid_resistance, spring_force},
     simulation::run_simulation,
     solver::SingleObjectPhysicsSystemSolver,
-    spawn_timed_task, AppliedDynamics, Float, FreeFallObject, FreeFallObjectSnapshot,
+    spawn_timed_task, AppliedDynamics, Body, BodySnapshot, Float,
 };
 use nalgebra::vector;
 use prelude::*;
@@ -24,7 +24,7 @@ pub mod prelude {
 mod del_b;
 mod del_c;
 
-pub const DEFAULT_INIT_SNAPSHOT: FreeFallObjectSnapshot<2> = FreeFallObjectSnapshot {
+pub const DEFAULT_INIT_SNAPSHOT: BodySnapshot<2> = BodySnapshot {
     mass: 1.0,
     moment_of_inertia: 0.0,
     frontal_area: 0.0,
@@ -47,15 +47,15 @@ pub async fn uppgift_extra_1_run_simulation<
     W: Unpin + AsyncWrite + Send,
     P: SingleObjectPhysicsSystemSolver<2, Applied = AppliedDynamics<2>>,
 >(
-    init_snapshot: FreeFallObjectSnapshot<2>,
+    init_snapshot: BodySnapshot<2>,
     k: Float,
     r: Float,
     dt: Float,
     output: &mut W,
-    solver_new: impl Fn(FreeFallObject<2>, Float) -> P,
+    solver_new: impl Fn(Body<2>, Float) -> P,
 ) {
     let solver = solver_new(
-        FreeFallObject {
+        Body {
             snapshot: init_snapshot,
             forces: vec![
                 Box::new(move |o| spring_force(o, k)),
@@ -71,7 +71,7 @@ pub async fn uppgift_extra_1_run_simulation<
     impl Data<2, 5, AppliedDynamics<2>, Float> for UppgE1Data {
         fn new_datapoint(
             time: Float,
-            object: &FreeFallObjectSnapshot<2>,
+            object: &BodySnapshot<2>,
             applied: &AppliedDynamics<2>,
             &k: &Float,
         ) -> [Float; 5] {
@@ -99,7 +99,7 @@ pub async fn uppgift_extra_1_run_simulation<
 
         fn should_end(
             time: Float,
-            _: &FreeFallObjectSnapshot<2>,
+            _: &BodySnapshot<2>,
             _: &AppliedDynamics<2>,
             _: &[[Float; 5]],
             _: &Float,

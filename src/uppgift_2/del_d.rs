@@ -13,7 +13,7 @@ pub async fn uppgift_d() {
         .await
         .unwrap();
 
-        let snapshot = FreeFallObjectSnapshot {
+        let snapshot = BodySnapshot {
             velocity: vector![0.0, init_velocity],
             ..*DEFAULT_BALL
         };

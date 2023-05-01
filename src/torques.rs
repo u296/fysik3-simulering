@@ -1,9 +1,9 @@
 use nalgebra::SVector;
 
-use crate::{forces::AirResistanceParameters, Float, FreeFallObjectSnapshot};
+use crate::{forces::AirResistanceParameters, BodySnapshot, Float};
 
 pub fn air_resistance_torque<const D: usize>(
-    o: &FreeFallObjectSnapshot<D>,
+    o: &BodySnapshot<D>,
     r: Float,
     air_resistance_params: AirResistanceParameters,
 ) -> SVector<Float, D> {

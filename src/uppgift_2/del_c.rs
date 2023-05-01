@@ -14,7 +14,7 @@ pub async fn uppgift_c() {
 
         tasks.extend(values.into_iter().map(|mass| {
             tokio::spawn(async move {
-                let initial = FreeFallObjectSnapshot {
+                let initial = BodySnapshot {
                     mass,
                     ..*DEFAULT_BALL
                 };
@@ -43,7 +43,7 @@ pub async fn uppgift_c() {
 
         tasks.extend(values.into_iter().map(|radius| {
             tokio::spawn(async move {
-                let initial = FreeFallObjectSnapshot {
+                let initial = BodySnapshot {
                     volume: std::f64::consts::PI * 4.0 * radius.powi(3) / 3.0,
                     ..*DEFAULT_BALL
                 };

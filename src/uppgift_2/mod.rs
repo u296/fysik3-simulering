@@ -3,7 +3,7 @@ use fysik3_simulering::{
     forces::{buoyancy, fluid_resistance, gravity},
     simulation::run_simulation,
     solver::EulerCromerSolver,
-    spawn_timed_task, AppliedDynamics, Float, FreeFallObject, FreeFallObjectSnapshot,
+    spawn_timed_task, AppliedDynamics, Body, BodySnapshot, Float,
 };
 use lazy_static::lazy_static;
 use nalgebra::vector;
@@ -14,7 +14,7 @@ mod prelude {
         honey_r, oil_r, uppgift2_run_simulation, DEFAULT_BALL, DEFAULT_BALL_RADIUS, HONEY_RHO,
         OIL_RHO,
     };
-    pub use fysik3_simulering::{ensure_dir_exists, Float, FreeFallObject, FreeFallObjectSnapshot};
+    pub use fysik3_simulering::{ensure_dir_exists, Body, BodySnapshot, Float};
     pub use nalgebra::{vector, Vector2};
     pub use std::{io::Write, path::Path, time::Instant};
     pub use tokio::{fs::File, io::AsyncWrite};
@@ -31,9 +31,9 @@ pub const DEFAULT_BALL_RADIUS: Float = 0.01;
 const IRON_DENSITY: Float = 7874.0;
 
 lazy_static! {
-    pub static ref DEFAULT_BALL: FreeFallObjectSnapshot<2> = {
+    pub static ref DEFAULT_BALL: BodySnapshot<2> = {
         let volume = std::f64::consts::PI * 4.0 * DEFAULT_BALL_RADIUS.powi(3) / 3.0;
-        FreeFallObjectSnapshot {
+        BodySnapshot {
             mass: IRON_DENSITY * volume,
             moment_of_inertia: 0.0,
             frontal_area: 0.0,
@@ -68,14 +68,14 @@ pub async fn uppgift_2() {
 }
 
 pub async fn uppgift2_run_simulation<W: AsyncWrite + Unpin + Send>(
-    init_snapshot: FreeFallObjectSnapshot<2>,
+    init_snapshot: BodySnapshot<2>,
     r: Float,
     rho: Float,
     dt: Float,
     output: &mut W,
 ) {
     let solver = EulerCromerSolver::new(
-        FreeFallObject {
+        Body {
             snapshot: init_snapshot,
             forces: vec![
                 Box::new(gravity),
@@ -92,7 +92,7 @@ pub async fn uppgift2_run_simulation<W: AsyncWrite + Unpin + Send>(
     impl Data<2, 4, AppliedDynamics<2>, Float> for Uppg2Data {
         fn new_datapoint(
             time: Float,
-            object: &FreeFallObjectSnapshot<2>,
+            object: &BodySnapshot<2>,
             applied: &AppliedDynamics<2>,
             &r: &Float,
         ) -> [Float; 4] {
@@ -110,7 +110,7 @@ pub async fn uppgift2_run_simulation<W: AsyncWrite + Unpin + Send>(
 
         fn should_end(
             _: Float,
-            _: &FreeFallObjectSnapshot<2>,
+            _: &BodySnapshot<2>,
             applied: &AppliedDynamics<2>,
             _: &[[Float; 4]],
             _: &Float,

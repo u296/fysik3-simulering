@@ -1,6 +1,6 @@
 use nalgebra::SVector;
 
-use crate::{Float, FreeFallObjectSnapshot};
+use crate::{BodySnapshot, Float};
 
 const G: Float = 9.82;
 
@@ -20,7 +20,7 @@ fn up<const D: usize>() -> SVector<Float, D> {
     x.into()
 }
 
-pub fn gravity<const D: usize>(o: &FreeFallObjectSnapshot<D>) -> SVector<Float, D> {
+pub fn gravity<const D: usize>(o: &BodySnapshot<D>) -> SVector<Float, D> {
     o.mass * G * down()
 }
 
@@ -31,7 +31,7 @@ pub struct AirResistanceParameters {
 }
 
 pub fn air_resistance<const D: usize>(
-    o: &FreeFallObjectSnapshot<D>,
+    o: &BodySnapshot<D>,
     air_resistance_params: AirResistanceParameters,
 ) -> SVector<Float, D> {
     0.5 * air_resistance_params.c_d
@@ -42,23 +42,20 @@ pub fn air_resistance<const D: usize>(
         * o.velocity.magnitude()
 }
 
-pub fn buoyancy<const D: usize>(o: &FreeFallObjectSnapshot<D>, rho: Float) -> SVector<Float, D> {
+pub fn buoyancy<const D: usize>(o: &BodySnapshot<D>, rho: Float) -> SVector<Float, D> {
     rho * G * o.volume * up()
 }
 
-pub fn fluid_resistance<const D: usize>(
-    o: &FreeFallObjectSnapshot<D>,
-    r: Float,
-) -> SVector<Float, D> {
+pub fn fluid_resistance<const D: usize>(o: &BodySnapshot<D>, r: Float) -> SVector<Float, D> {
     -r * o.velocity
 }
 
-pub fn spring_force<const D: usize>(o: &FreeFallObjectSnapshot<D>, k: Float) -> SVector<Float, D> {
+pub fn spring_force<const D: usize>(o: &BodySnapshot<D>, k: Float) -> SVector<Float, D> {
     -k * o.position
 }
 
 pub fn magnus_effect<const D: usize>(
-    o: &FreeFallObjectSnapshot<D>,
+    o: &BodySnapshot<D>,
     radius: Float,
     rho: Float,
 ) -> SVector<Float, D> {

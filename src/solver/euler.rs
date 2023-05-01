@@ -1,16 +1,16 @@
 use nalgebra::SVector;
 
-use crate::{AppliedDynamics, Float, FreeFallObject};
+use crate::{AppliedDynamics, Body, Float};
 
 use super::{PhysicsSystemSolver, SingleObjectPhysicsSystemSolver, Step};
 
 pub struct EulerSolver<const D: usize> {
-    pub object: FreeFallObject<D>,
+    pub object: Body<D>,
     dt: Float,
 }
 
 impl<const D: usize> EulerSolver<D> {
-    pub fn new(object: FreeFallObject<D>, dt: Float) -> Self {
+    pub fn new(object: Body<D>, dt: Float) -> Self {
         Self { object, dt }
     }
 }
@@ -61,7 +61,7 @@ impl<const D: usize> PhysicsSystemSolver for EulerSolver<D> {
 }
 
 impl<const D: usize> SingleObjectPhysicsSystemSolver<D> for EulerSolver<D> {
-    fn get_object(&self) -> &FreeFallObject<D> {
+    fn get_object(&self) -> &Body<D> {
         &self.object
     }
 }
