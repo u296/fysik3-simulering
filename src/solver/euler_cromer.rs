@@ -56,10 +56,6 @@ impl<const D: usize> PhysicsSystemSolver for EulerCromerSolver<D> {
             angular_acceleration,
         }
     }
-
-    fn get_dt(&self) -> Float {
-        self.dt
-    }
 }
 
 impl<const D: usize> SingleObjectPhysicsSystemSolver<D> for EulerCromerSolver<D> {

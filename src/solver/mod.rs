@@ -15,7 +15,6 @@ pub trait PhysicsSystemSolver {
     type Applied;
     fn step_forward(&mut self) -> Step<Self::Applied>;
     fn get_applied(&self) -> Self::Applied;
-    fn get_dt(&self) -> Float;
 }
 
 pub trait SingleObjectPhysicsSystemSolver<const D: usize>: PhysicsSystemSolver {

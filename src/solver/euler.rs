@@ -54,10 +54,6 @@ impl<const D: usize> PhysicsSystemSolver for EulerSolver<D> {
             angular_acceleration,
         }
     }
-
-    fn get_dt(&self) -> Float {
-        self.dt
-    }
 }
 
 impl<const D: usize> SingleObjectPhysicsSystemSolver<D> for EulerSolver<D> {
