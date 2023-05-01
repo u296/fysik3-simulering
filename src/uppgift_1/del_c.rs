@@ -4,7 +4,7 @@ pub async fn uppgift_c() {
     let default_alpha = 35.0f64.to_radians();
     let default_velocity = 40.0;
 
-    let dt = 0.01;
+    let dt = 0.001;
 
     {
         // mass variation

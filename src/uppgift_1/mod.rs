@@ -123,30 +123,35 @@ pub async fn uppgift1_run_simulation<W: AsyncWrite + Unpin + Send>(
 
     struct Uppg1Data;
 
-    impl Data<2, 3, AppliedDynamics<2>, ()> for Uppg1Data {
+    impl Data<2, 4, AppliedDynamics<2>, ()> for Uppg1Data {
         fn new_datapoint(
             time: Float,
             object: &FreeFallObjectSnapshot<2>,
             _: &AppliedDynamics<2>,
             _: &(),
-        ) -> [Float; 3] {
-            [time, object.position[0], object.position[1]]
+        ) -> [Float; 4] {
+            [
+                time,
+                object.position[0],
+                object.position[1],
+                object.velocity.magnitude(),
+            ]
         }
 
-        fn column_names() -> [&'static str; 3] {
-            ["t (s)", "x (m)", "y (m)"]
+        fn column_names() -> [&'static str; 4] {
+            ["t (s)", "x (m)", "y (m)", "v (m/s)"]
         }
 
         fn should_end(
             _: Float,
             object: &FreeFallObjectSnapshot<2>,
             _: &AppliedDynamics<2>,
-            _: &[[Float; 3]],
+            _: &[[Float; 4]],
             _: &(),
         ) -> bool {
             object.position.y < 0.0
         }
     }
 
-    run_simulation::<Uppg1Data, 2, 3, _, _, _>(solver, (), output).await;
+    run_simulation::<Uppg1Data, 2, 4, _, _, _>(solver, (), output).await;
 }
