@@ -6,7 +6,7 @@ pub async fn uppgift_e() {
     let vals = vec![0.001, 0.005, 0.01, 0.05, 0.1];
 
     for dt in vals {
-        let mut output_file = File::create(&format!("uppgifter/1/e/dt-{dt}.csv"))
+        let mut output_file = File::create(&format!("uppgifter/1/e/dt-{:.3}.csv", dt))
             .await
             .unwrap();
         uppgift1_run_simulation(

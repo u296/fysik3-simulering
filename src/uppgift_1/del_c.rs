@@ -17,9 +17,10 @@ pub async fn uppgift_c() {
                 ..*BALL_SNAPSHOT
             };
 
-            let mut output_file = File::create(&format!("uppgifter/1/c/mass/mass-{mass}.csv"))
-                .await
-                .unwrap();
+            let mut output_file =
+                File::create(&format!("uppgifter/1/c/mass/mass-{:0>4.1}.csv", mass))
+                    .await
+                    .unwrap();
             uppgift1_run_simulation(init_snapshot, *BALL_AIR_RESISTANCE, dt, &mut output_file)
                 .await;
         }
@@ -37,7 +38,8 @@ pub async fn uppgift_c() {
             };
 
             let mut output_file = File::create(&format!(
-                "uppgifter/1/c/initial-y/initial-y-{initial_y}.csv"
+                "uppgifter/1/c/initial-y/initial-y-{:0>3}.csv",
+                initial_y
             ))
             .await
             .unwrap();
@@ -58,7 +60,8 @@ pub async fn uppgift_c() {
             };
 
             let mut output_file = File::create(&format!(
-                "uppgifter/1/c/initial-velocity/initial-velocity-{initial_velocity}.csv"
+                "uppgifter/1/c/initial-velocity/initial-velocity-{:0>3}.csv",
+                initial_velocity
             ))
             .await
             .unwrap();

@@ -9,7 +9,7 @@ pub async fn uppgift_b() {
         .into_iter()
         .map(|dt| {
             tokio::spawn(async move {
-                let mut output = File::create(&format!("uppgifter/extra_1/b/dt-{dt}.csv"))
+                let mut output = File::create(&format!("uppgifter/extra_1/b/dt-{:.4}.csv", dt))
                     .await
                     .unwrap();
                 uppgift_extra_1_run_simulation(

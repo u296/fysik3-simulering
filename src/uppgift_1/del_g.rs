@@ -14,7 +14,7 @@ pub async fn uppgift_g() {
         .into_iter()
         .map(|dt| {
             tokio::spawn(async move {
-                let mut output_file = File::create(&format!("uppgifter/1/g/dt-{dt}.csv"))
+                let mut output_file = File::create(&format!("uppgifter/1/g/dt-{:.3}.csv", dt))
                     .await
                     .unwrap();
                 uppgift1_run_simulation(*AIRCRAFT_SNAPSHOT, air_resistance, dt, &mut output_file)

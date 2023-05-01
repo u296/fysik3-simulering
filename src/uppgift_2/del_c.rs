@@ -19,11 +19,18 @@ pub async fn uppgift_c() {
                     ..*DEFAULT_BALL
                 };
 
-                let mut output_file = File::create(&format!("uppgifter/2/c/mass/mass-{mass}.csv"))
-                    .await
-                    .unwrap();
-                uppgift2_run_simulation(initial, DEFAULT_R, HONEY_RHO, 0.001, &mut output_file)
-                    .await;
+                let mut output_file =
+                    File::create(&format!("uppgifter/2/c/mass/mass-{:.3}.csv", mass))
+                        .await
+                        .unwrap();
+                uppgift2_run_simulation(
+                    initial,
+                    honey_r(DEFAULT_BALL_RADIUS),
+                    HONEY_RHO,
+                    0.001,
+                    &mut output_file,
+                )
+                .await;
             })
         }));
     }
@@ -37,17 +44,22 @@ pub async fn uppgift_c() {
         tasks.extend(values.into_iter().map(|radius| {
             tokio::spawn(async move {
                 let initial = FreeFallObjectSnapshot {
-                    frontal_area: std::f64::consts::PI * radius.powi(2),
                     volume: std::f64::consts::PI * 4.0 * radius.powi(3) / 3.0,
                     ..*DEFAULT_BALL
                 };
 
                 let mut output_file =
-                    File::create(&format!("uppgifter/2/c/radius/radius-{radius}.csv"))
+                    File::create(&format!("uppgifter/2/c/radius/radius-{:.3}.csv", radius))
                         .await
                         .unwrap();
-                uppgift2_run_simulation(initial, DEFAULT_R, HONEY_RHO, 0.001, &mut output_file)
-                    .await;
+                uppgift2_run_simulation(
+                    initial,
+                    honey_r(radius),
+                    HONEY_RHO,
+                    0.001,
+                    &mut output_file,
+                )
+                .await;
             })
         }));
     }

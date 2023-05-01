@@ -5,7 +5,7 @@ pub async fn uppgift_e() {
     let mut output_file = File::create("uppgifter/2/e/result.csv").await.unwrap();
     uppgift2_run_simulation(
         *DEFAULT_BALL,
-        0.9 * DEFAULT_BALL_RADIUS,
+        oil_r(DEFAULT_BALL_RADIUS),
         OIL_RHO,
         0.001,
         &mut output_file,
