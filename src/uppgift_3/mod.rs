@@ -20,14 +20,18 @@ use prelude::*;
 use tokio::{io::AsyncWrite, join};
 
 use del_a::uppgift_a;
+use del_b::uppgift_b;
 use del_c::uppgift_c;
 use del_d::uppgift_d;
 use del_e::uppgift_e;
 
 mod del_a;
+mod del_b;
 mod del_c;
 mod del_d;
 mod del_e;
+
+const ENERGY_THRESHHOLD: Float = 0.000000001;
 
 pub const DEFAULT_INIT_SNAPSHOT: BodySnapshot<2> = BodySnapshot {
     mass: 1.0,
@@ -41,13 +45,14 @@ pub const DEFAULT_INIT_SNAPSHOT: BodySnapshot<2> = BodySnapshot {
 pub const DEFAULT_K: Float = 100.0;
 
 pub async fn uppgift_3() {
-    let (a, c, d, e) = join!(
+    let (a, b, c, d, e) = join!(
         spawn_timed_task("3-a", uppgift_a),
+        spawn_timed_task("3-b", uppgift_b),
         spawn_timed_task("3-c", uppgift_c),
         spawn_timed_task("3-d", uppgift_d),
         spawn_timed_task("3-e", uppgift_e),
     );
-    [a, c, d, e].into_iter().for_each(|x| x.unwrap());
+    [a, b, c, d, e].into_iter().for_each(|x| x.unwrap());
 }
 
 pub async fn uppgift3_run_simulation<
@@ -105,12 +110,16 @@ pub async fn uppgift3_run_simulation<
 
         fn should_end(
             time: Float,
-            _: &BodySnapshot<2>,
-            _: &AppliedDynamics<2>,
+            body: &BodySnapshot<2>,
+            applied: &AppliedDynamics<2>,
             _: &[[Float; 5]],
-            _: &Float,
+            &k: &Float,
         ) -> bool {
-            time > 10.0
+            let potential_energy = k * body.position.magnitude().powi(2) / 2.0;
+            let kinetic_energy = body.mass * body.velocity.magnitude().powi(2) / 2.0;
+            let mech_energy = potential_energy + kinetic_energy;
+
+            time > 10.0 || (mech_energy < ENERGY_THRESHHOLD)
         }
     }
 
