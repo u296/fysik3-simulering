@@ -1,11 +1,11 @@
 use fysik3_simulering::{
-    data::DataLogger,
+    data::Data,
     ensure_dir_exists,
     forces::{air_resistance, gravity, magnus_effect, AirResistanceParameters},
     simulation::run_simulation,
-    solver::{EulerCromerSolver, Step},
+    solver::EulerCromerSolver,
     torques::air_resistance_torque,
-    AppliedDeltas, AppliedDynamics, Body, BodySnapshot, Float,
+    AppliedDynamics, Body, BodySnapshot, Float,
 };
 use nalgebra::vector;
 use tokio::{fs::File, io::AsyncWrite};
@@ -81,18 +81,15 @@ pub async fn uppgift_extra_2_run_simulation<W: AsyncWrite + Unpin + Send>(
         dt,
     );
 
-    struct UppgE2Data {
-        s: Float,
-    };
+    struct UppgE2Data;
 
-    impl DataLogger<3, 11, Step<AppliedDynamics<3>, AppliedDeltas<3>>, (), File> for UppgE2Data {
+    impl Data<3, 10, AppliedDynamics<3>, ()> for UppgE2Data {
         fn new_datapoint(
-            &mut self,
             time: Float,
             object: &BodySnapshot<3>,
-            step: &Step<AppliedDynamics<3>, AppliedDeltas<3>>,
+            applied: &AppliedDynamics<3>,
             _: &(),
-        ) -> [Float; 11] {
+        ) -> [Float; 10] {
             let kinetic = 0.5 * object.mass * object.velocity.magnitude_squared();
             let potential = object.mass * object.position[1] * 9.82;
 
@@ -103,23 +100,21 @@ pub async fn uppgift_extra_2_run_simulation<W: AsyncWrite + Unpin + Send>(
                 object.position.x,
                 object.position.y,
                 object.position.z,
-                self.s,
                 energy,
                 object.velocity.x,
                 object.velocity.y,
                 object.velocity.z,
                 object.angular_velocity.magnitude(),
-                step.applied.angular_acceleration.magnitude(),
+                applied.angular_acceleration.magnitude(),
             ]
         }
 
-        fn column_names() -> [&'static str; 11] {
+        fn column_names() -> [&'static str; 10] {
             [
                 "t (s)",
                 "x (m)",
                 "y (m)",
                 "z (m)",
-                "s (m)",
                 "translationell mekanisk energi (J)",
                 "vx (m/s)",
                 "vy (m/s)",
@@ -132,15 +127,13 @@ pub async fn uppgift_extra_2_run_simulation<W: AsyncWrite + Unpin + Send>(
         fn should_end(
             time: Float,
             object: &BodySnapshot<3>,
-            _: &Step<AppliedDynamics<3>, AppliedDeltas<3>>,
-            _: &[[Float; 11]],
+            _: &AppliedDynamics<3>,
+            _: &[[Float; 10]],
             _: &(),
         ) -> bool {
             object.position.y < 0.0 || time > 10.0
         }
     }
 
-    let datalogger = UppgE2Data { s: 0.0 };
-
-    run_simulation::<UppgE2Data, 3, 11, _, _, _>(solver, (), datalogger).await;
+    run_simulation::<UppgE2Data, 3, 10, _, _, _>(solver, (), output).await;
 }

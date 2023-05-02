@@ -31,16 +31,16 @@ pub const DEFAULT_BALL_RADIUS: Float = 0.01;
 const IRON_DENSITY: Float = 7874.0;
 
 lazy_static! {
-    pub static ref DEFAULT_BALL: BodySnapshot<2> = {
+    pub static ref DEFAULT_BALL: BodySnapshot<1> = {
         let volume = std::f64::consts::PI * 4.0 * DEFAULT_BALL_RADIUS.powi(3) / 3.0;
         BodySnapshot {
             mass: IRON_DENSITY * volume,
             moment_of_inertia: 0.0,
             frontal_area: 0.0,
             volume,
-            position: vector![0.0, 0.0],
-            velocity: vector![0.0, 0.0],
-            angular_velocity: vector![0.0, 0.0],
+            position: vector![0.0],
+            velocity: vector![0.0],
+            angular_velocity: vector![0.0],
         }
     };
 }
@@ -68,7 +68,7 @@ pub async fn uppgift_2() {
 }
 
 pub async fn uppgift2_run_simulation<W: AsyncWrite + Unpin + Send>(
-    init_snapshot: BodySnapshot<2>,
+    init_snapshot: BodySnapshot<1>,
     r: Float,
     rho: Float,
     dt: Float,
@@ -89,17 +89,17 @@ pub async fn uppgift2_run_simulation<W: AsyncWrite + Unpin + Send>(
 
     struct Uppg2Data;
 
-    impl Data<2, 4, AppliedDynamics<2>, Float> for Uppg2Data {
+    impl Data<1, 4, AppliedDynamics<1>, Float> for Uppg2Data {
         fn new_datapoint(
             time: Float,
-            object: &BodySnapshot<2>,
-            applied: &AppliedDynamics<2>,
+            object: &BodySnapshot<1>,
+            applied: &AppliedDynamics<1>,
             &r: &Float,
         ) -> [Float; 4] {
             [
                 time,
-                object.velocity.y,
-                object.position.y,
+                object.velocity.x,
+                object.position.x,
                 applied.force.magnitude() / r,
             ]
         }
@@ -110,8 +110,8 @@ pub async fn uppgift2_run_simulation<W: AsyncWrite + Unpin + Send>(
 
         fn should_end(
             _: Float,
-            _: &BodySnapshot<2>,
-            applied: &AppliedDynamics<2>,
+            _: &BodySnapshot<1>,
+            applied: &AppliedDynamics<1>,
             _: &[[Float; 4]],
             _: &Float,
         ) -> bool {
@@ -119,5 +119,5 @@ pub async fn uppgift2_run_simulation<W: AsyncWrite + Unpin + Send>(
         }
     }
 
-    run_simulation::<Uppg2Data, 2, 4, _, _, _>(solver, r, output).await;
+    run_simulation::<Uppg2Data, 1, 4, _, _, _>(solver, r, output).await;
 }
