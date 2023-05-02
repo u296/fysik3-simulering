@@ -5,18 +5,14 @@ use crate::{BodySnapshot, Float};
 const G: Float = 9.82;
 
 fn down<const D: usize>() -> SVector<Float, D> {
-    let mut x: [Float; D] = [0.0; D];
-    if D >= 2 {
-        x[1] = -1.0;
-    }
-    x.into()
+    -up()
 }
 
 fn up<const D: usize>() -> SVector<Float, D> {
     let mut x: [Float; D] = [0.0; D];
-    if D >= 2 {
-        x[1] = 1.0;
-    }
+
+    x[if D >= 2 { 1 } else { 0 }] = 1.0;
+
     x.into()
 }
 
@@ -54,14 +50,16 @@ pub fn spring_force<const D: usize>(o: &BodySnapshot<D>, k: Float) -> SVector<Fl
     -k * o.position
 }
 
+/// SIDE AREA IS ASSUMED TO BE EQUAL TO FRONTAL AREA
 pub fn magnus_effect<const D: usize>(
     o: &BodySnapshot<D>,
     radius: Float,
     rho: Float,
 ) -> SVector<Float, D> {
     2.0 * rho
-        * o.velocity.magnitude()
-        * o.angular_velocity.magnitude()
         * radius
-        * o.angular_velocity.cross(&o.velocity).normalize()
+        * o.frontal_area
+        * o.angular_velocity.magnitude()
+        * o.velocity.magnitude()
+        * o.angular_velocity.cross(&o.velocity).normalize() // use right hand curl rule to find positive rotation
 }
