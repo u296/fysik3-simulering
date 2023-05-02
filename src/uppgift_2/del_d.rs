@@ -14,7 +14,7 @@ pub async fn uppgift_d() {
         .unwrap();
 
         let snapshot = BodySnapshot {
-            velocity: vector![0.0, init_velocity],
+            velocity: vector![init_velocity],
             ..*DEFAULT_BALL
         };
         uppgift2_run_simulation(

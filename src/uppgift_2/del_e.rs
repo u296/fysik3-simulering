@@ -7,7 +7,7 @@ pub async fn uppgift_e() {
         *DEFAULT_BALL,
         oil_r(DEFAULT_BALL_RADIUS),
         OIL_RHO,
-        0.001,
+        0.01,
         &mut output_file,
     )
     .await;

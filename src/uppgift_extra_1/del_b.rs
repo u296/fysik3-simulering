@@ -3,7 +3,7 @@ use super::prelude::*;
 pub async fn uppgift_b() {
     ensure_dir_exists("uppgifter/extra_1/b").await;
 
-    let values = vec![0.0001, 0.001, 0.01, 0.1, 1.0];
+    let values = vec![0.0001, 0.001, 0.01];
 
     let tasks: Vec<_> = values
         .into_iter()
