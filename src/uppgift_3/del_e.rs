@@ -10,9 +10,7 @@ pub async fn uppgift_e() {
     r = 2 * 100.0
      */
 
-    let r = 2.0 * DEFAULT_INIT_SNAPSHOT.mass * (DEFAULT_K / DEFAULT_INIT_SNAPSHOT.mass).sqrt();
-
-    let values = vec![18.0, 18.5, 19.0, 19.5, 20.0, 21.0, 22.0];
+    let values = vec![18.0, 19.0, 20.0, 21.0, 22.0];
 
     let tasks: Vec<_> = values
         .into_iter()

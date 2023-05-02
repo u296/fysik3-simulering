@@ -33,14 +33,14 @@ mod del_e;
 
 const ENERGY_THRESHHOLD: Float = 0.000000001;
 
-pub const DEFAULT_INIT_SNAPSHOT: BodySnapshot<2> = BodySnapshot {
+pub const DEFAULT_INIT_SNAPSHOT: BodySnapshot<1> = BodySnapshot {
     mass: 1.0,
     moment_of_inertia: 0.0,
     frontal_area: 0.0,
     volume: 0.0,
-    position: vector![10.0, 0.0],
-    velocity: vector![0.0, 0.0],
-    angular_velocity: vector![0.0, 0.0],
+    position: vector![10.0],
+    velocity: vector![0.0],
+    angular_velocity: vector![0.0],
 };
 pub const DEFAULT_K: Float = 100.0;
 
@@ -57,14 +57,14 @@ pub async fn uppgift_3() {
 
 pub async fn uppgift3_run_simulation<
     W: Unpin + AsyncWrite + Send,
-    P: SingleObjectPhysicsSystemSolver<2, Applied = AppliedDynamics<2>>,
+    P: SingleObjectPhysicsSystemSolver<1, Applied = AppliedDynamics<1>>,
 >(
-    init_snapshot: BodySnapshot<2>,
+    init_snapshot: BodySnapshot<1>,
     k: Float,
     r: Float,
     dt: Float,
     output: &mut W,
-    solver_new: impl Fn(Body<2>, Float) -> P,
+    solver_new: impl Fn(Body<1>, Float) -> P,
 ) {
     let solver = solver_new(
         Body {
@@ -79,11 +79,11 @@ pub async fn uppgift3_run_simulation<
     );
     struct Uppg3Data;
 
-    impl Data<2, 5, AppliedDynamics<2>, Float> for Uppg3Data {
+    impl Data<1, 5, AppliedDynamics<1>, Float> for Uppg3Data {
         fn new_datapoint(
             time: Float,
-            object: &BodySnapshot<2>,
-            applied: &AppliedDynamics<2>,
+            object: &BodySnapshot<1>,
+            applied: &AppliedDynamics<1>,
             &k: &Float,
         ) -> [Float; 5] {
             let potential_energy = k * object.position.magnitude().powi(2) / 2.0;
@@ -110,8 +110,8 @@ pub async fn uppgift3_run_simulation<
 
         fn should_end(
             time: Float,
-            body: &BodySnapshot<2>,
-            applied: &AppliedDynamics<2>,
+            body: &BodySnapshot<1>,
+            _: &AppliedDynamics<1>,
             _: &[[Float; 5]],
             &k: &Float,
         ) -> bool {
@@ -123,5 +123,5 @@ pub async fn uppgift3_run_simulation<
         }
     }
 
-    run_simulation::<Uppg3Data, 2, 5, _, _, _>(solver, k, output).await;
+    run_simulation::<Uppg3Data, 1, 5, _, _, _>(solver, k, output).await;
 }
