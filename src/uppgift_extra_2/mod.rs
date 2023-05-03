@@ -106,9 +106,8 @@ impl<'a, W: AsyncWrite + Send + Sync + Unpin> DataLogger<3, 11, Step<3>, (), W>
         let potential = object.mass * object.position[1] * 9.82;
 
         let energy = kinetic + potential;
-        self.distance_xz += step.deltas.delta_s.xz().magnitude();
 
-        [
+        let ret = [
             time,
             object.position.x,
             object.position.y,
@@ -120,7 +119,10 @@ impl<'a, W: AsyncWrite + Send + Sync + Unpin> DataLogger<3, 11, Step<3>, (), W>
             object.velocity.z,
             object.angular_velocity.magnitude(),
             step.applied.angular_acceleration.magnitude(),
-        ]
+        ];
+
+        self.distance_xz += step.deltas.delta_s.xz().magnitude();
+        ret
     }
 
     fn column_names() -> [&'static str; 11] {
