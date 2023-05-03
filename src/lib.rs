@@ -43,6 +43,11 @@ pub struct AppliedDynamics<const D: usize> {
     pub angular_acceleration: SVector<Float, D>,
 }
 
+pub struct StepChanges<const D: usize> {
+    pub delta_s: SVector<Float, D>,
+    pub delta_v: SVector<Float, D>,
+}
+
 pub async fn ensure_dir_exists(p: impl AsRef<Path>) {
     if let Err(e) = fs::create_dir_all(p).await {
         match e.kind() {

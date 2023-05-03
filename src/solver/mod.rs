@@ -1,4 +1,4 @@
-use crate::{Body, Float};
+use crate::{AppliedDynamics, Body, BodySnapshot, Float, StepChanges};
 
 mod euler;
 mod euler_cromer;
@@ -6,17 +6,19 @@ mod euler_cromer;
 pub use euler::EulerSolver;
 pub use euler_cromer::EulerCromerSolver;
 
-pub struct Step<T> {
+pub struct Step<const D: usize> {
     pub time: Float,
-    pub applied: T,
+    pub applied: AppliedDynamics<D>,
+    pub deltas: StepChanges<D>,
+    pub new_state: BodySnapshot<D>,
 }
 
 pub trait PhysicsSystemSolver {
-    type Applied;
-    fn step_forward(&mut self) -> Step<Self::Applied>;
-    fn get_applied(&self) -> Self::Applied;
+    type StepType;
+    fn step_forward(&self) -> Self::StepType;
 }
 
 pub trait SingleObjectPhysicsSystemSolver<const D: usize>: PhysicsSystemSolver {
     fn get_object(&self) -> &Body<D>;
+    fn get_object_mut(&mut self) -> &mut Body<D>;
 }

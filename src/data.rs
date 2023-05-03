@@ -6,22 +6,33 @@ use crate::{BodySnapshot, Float};
 const MAX_DATAPOINTS: usize = 2000;
 
 #[async_trait]
-pub trait Data<const D: usize, const N: usize, AppliedType, UserType> {
+pub trait DataLogger<
+    const D: usize,
+    const N: usize,
+    StepType,
+    UserType,
+    W: AsyncWrite + Send + Sync + Unpin,
+>
+{
+    /// The `object` parameter is the object before the step
     fn new_datapoint(
+        &mut self,
         time: Float,
         object: &BodySnapshot<D>,
-        applied: &AppliedType,
+        step: &StepType,
         user: &UserType,
     ) -> [Float; N];
     fn column_names() -> [&'static str; N];
     fn should_end(
+        &mut self,
         time: Float,
         object: &BodySnapshot<D>,
-        applied: &AppliedType,
+        step: &StepType,
         current_data: &[[Float; N]],
         user: &UserType,
     ) -> bool;
-    async fn write_data<W: AsyncWrite + Unpin + Send>(data: &[[Float; N]], output: &mut W) {
+    fn get_output(&mut self) -> &mut W;
+    async fn write_data(data: &[[Float; N]], output: &mut W) {
         let mut output_writer = BufWriter::new(output);
 
         let first_row = {

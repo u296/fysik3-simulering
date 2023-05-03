@@ -1,9 +1,9 @@
 use fysik3_simulering::{
-    data::Data,
+    data::DataLogger,
     ensure_dir_exists,
     forces::{air_resistance, gravity, magnus_effect, AirResistanceParameters},
     simulation::run_simulation,
-    solver::EulerCromerSolver,
+    solver::{EulerCromerSolver, Step},
     torques::air_resistance_torque,
     AppliedDynamics, Body, BodySnapshot, Float,
 };
@@ -59,7 +59,7 @@ pub async fn uppgift_extra_2() {
     .await;
 }
 
-pub async fn uppgift_extra_2_run_simulation<W: AsyncWrite + Unpin + Send>(
+pub async fn uppgift_extra_2_run_simulation<W: AsyncWrite + Unpin + Send + Sync>(
     initial_snapshot: BodySnapshot<3>,
     air_resistance_params: AirResistanceParameters,
     radius: Float,
@@ -81,59 +81,71 @@ pub async fn uppgift_extra_2_run_simulation<W: AsyncWrite + Unpin + Send>(
         dt,
     );
 
-    struct UppgE2Data;
+    let datalogger = UppgE2Data { output };
 
-    impl Data<3, 10, AppliedDynamics<3>, ()> for UppgE2Data {
-        fn new_datapoint(
-            time: Float,
-            object: &BodySnapshot<3>,
-            applied: &AppliedDynamics<3>,
-            _: &(),
-        ) -> [Float; 10] {
-            let kinetic = 0.5 * object.mass * object.velocity.magnitude_squared();
-            let potential = object.mass * object.position[1] * 9.82;
+    run_simulation::<_, 3, 10, _, _, _>(solver, (), datalogger).await;
+}
 
-            let energy = kinetic + potential;
+struct UppgE2Data<'a, W> {
+    output: &'a mut W,
+}
 
-            [
-                time,
-                object.position.x,
-                object.position.y,
-                object.position.z,
-                energy,
-                object.velocity.x,
-                object.velocity.y,
-                object.velocity.z,
-                object.angular_velocity.magnitude(),
-                applied.angular_acceleration.magnitude(),
-            ]
-        }
+impl<'a, W: AsyncWrite + Send + Sync + Unpin> DataLogger<3, 10, Step<3>, (), W>
+    for UppgE2Data<'a, W>
+{
+    fn new_datapoint(
+        &mut self,
+        time: Float,
+        object: &BodySnapshot<3>,
+        step: &Step<3>,
+        _: &(),
+    ) -> [Float; 10] {
+        let kinetic = 0.5 * object.mass * object.velocity.magnitude_squared();
+        let potential = object.mass * object.position[1] * 9.82;
 
-        fn column_names() -> [&'static str; 10] {
-            [
-                "t (s)",
-                "x (m)",
-                "y (m)",
-                "z (m)",
-                "translationell mekanisk energi (J)",
-                "vx (m/s)",
-                "vy (m/s)",
-                "vz (m/s)",
-                "omega (rad/s)",
-                "tau (Nm)",
-            ]
-        }
+        let energy = kinetic + potential;
 
-        fn should_end(
-            time: Float,
-            object: &BodySnapshot<3>,
-            _: &AppliedDynamics<3>,
-            _: &[[Float; 10]],
-            _: &(),
-        ) -> bool {
-            object.position.y < 0.0 || time > 10.0
-        }
+        [
+            time,
+            object.position.x,
+            object.position.y,
+            object.position.z,
+            energy,
+            object.velocity.x,
+            object.velocity.y,
+            object.velocity.z,
+            object.angular_velocity.magnitude(),
+            step.applied.angular_acceleration.magnitude(),
+        ]
     }
 
-    run_simulation::<UppgE2Data, 3, 10, _, _, _>(solver, (), output).await;
+    fn column_names() -> [&'static str; 10] {
+        [
+            "t (s)",
+            "x (m)",
+            "y (m)",
+            "z (m)",
+            "translationell mekanisk energi (J)",
+            "vx (m/s)",
+            "vy (m/s)",
+            "vz (m/s)",
+            "omega (rad/s)",
+            "tau (Nm)",
+        ]
+    }
+
+    fn should_end(
+        &mut self,
+        time: Float,
+        object: &BodySnapshot<3>,
+        _: &Step<3>,
+        _: &[[Float; 10]],
+        _: &(),
+    ) -> bool {
+        object.position.y < 0.0 || time > 10.0
+    }
+
+    fn get_output(&mut self) -> &mut W {
+        self.output
+    }
 }

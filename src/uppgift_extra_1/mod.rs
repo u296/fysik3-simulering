@@ -1,8 +1,8 @@
 use fysik3_simulering::{
-    data::Data,
+    data::DataLogger,
     forces::{fluid_resistance, spring_force},
     simulation::run_simulation,
-    solver::SingleObjectPhysicsSystemSolver,
+    solver::{SingleObjectPhysicsSystemSolver, Step},
     spawn_timed_task, AppliedDynamics, Body, BodySnapshot, Float,
 };
 use nalgebra::vector;
@@ -44,8 +44,8 @@ pub async fn uppgift_extra_1() {
 }
 
 pub async fn uppgift_extra_1_run_simulation<
-    W: Unpin + AsyncWrite + Send,
-    P: SingleObjectPhysicsSystemSolver<1, Applied = AppliedDynamics<1>>,
+    W: Unpin + AsyncWrite + Send + Sync,
+    P: SingleObjectPhysicsSystemSolver<1, StepType = Step<1>>,
 >(
     init_snapshot: BodySnapshot<1>,
     k: Float,
@@ -66,47 +66,59 @@ pub async fn uppgift_extra_1_run_simulation<
         dt,
     );
 
-    struct UppgE1Data;
+    let datalogger = UppgE1Data { output };
 
-    impl Data<1, 5, AppliedDynamics<1>, Float> for UppgE1Data {
-        fn new_datapoint(
-            time: Float,
-            object: &BodySnapshot<1>,
-            applied: &AppliedDynamics<1>,
-            &k: &Float,
-        ) -> [Float; 5] {
-            let potential_energy = k * object.position.magnitude().powi(2) / 2.0;
-            let kinetic_energy = object.mass * object.velocity.magnitude().powi(2) / 2.0;
-            let mech_energy = potential_energy + kinetic_energy;
-            [
-                time,
-                object.position.x,
-                object.velocity.x,
-                applied.acceleration.x,
-                mech_energy,
-            ]
-        }
+    run_simulation::<_, 1, 5, _, _, _>(solver, k, datalogger).await;
+}
 
-        fn column_names() -> [&'static str; 5] {
-            [
-                "t (s)",
-                "x (m)",
-                "v (m/s)",
-                "a (m/s²)",
-                "mekanisk energi (J)",
-            ]
-        }
+struct UppgE1Data<'a, W> {
+    output: &'a mut W,
+}
 
-        fn should_end(
-            time: Float,
-            _: &BodySnapshot<1>,
-            _: &AppliedDynamics<1>,
-            _: &[[Float; 5]],
-            _: &Float,
-        ) -> bool {
-            time > 10.0
-        }
+impl<'a, W: AsyncWrite + Send + Sync + Unpin> DataLogger<1, 5, Step<1>, Float, W>
+    for UppgE1Data<'a, W>
+{
+    fn new_datapoint(
+        &mut self,
+        time: Float,
+        object: &BodySnapshot<1>,
+        step: &Step<1>,
+        &k: &Float,
+    ) -> [Float; 5] {
+        let potential_energy = k * object.position.magnitude().powi(2) / 2.0;
+        let kinetic_energy = object.mass * object.velocity.magnitude().powi(2) / 2.0;
+        let mech_energy = potential_energy + kinetic_energy;
+        [
+            time,
+            object.position.x,
+            object.velocity.x,
+            step.applied.acceleration.x,
+            mech_energy,
+        ]
     }
 
-    run_simulation::<UppgE1Data, 1, 5, _, _, _>(solver, k, output).await;
+    fn column_names() -> [&'static str; 5] {
+        [
+            "t (s)",
+            "x (m)",
+            "v (m/s)",
+            "a (m/s²)",
+            "mekanisk energi (J)",
+        ]
+    }
+
+    fn should_end(
+        &mut self,
+        time: Float,
+        _: &BodySnapshot<1>,
+        _: &Step<1>,
+        _: &[[Float; 5]],
+        _: &Float,
+    ) -> bool {
+        time > 10.0
+    }
+
+    fn get_output(&mut self) -> &mut W {
+        self.output
+    }
 }

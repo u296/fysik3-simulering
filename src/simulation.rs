@@ -1,35 +1,40 @@
 use tokio::io::AsyncWrite;
 
-use crate::{data::Data, solver::SingleObjectPhysicsSystemSolver};
+use crate::{
+    data::DataLogger,
+    solver::{SingleObjectPhysicsSystemSolver, Step},
+};
 
 pub async fn run_simulation<
-    DataType: Data<D, N, Solver::Applied, UserType> + Send,
+    DataType: DataLogger<D, N, Step<D>, UserType, W> + Send,
     const D: usize,
     const N: usize,
     UserType,
-    Solver: SingleObjectPhysicsSystemSolver<D>,
-    Output: AsyncWrite + Unpin + Send,
+    Solver: SingleObjectPhysicsSystemSolver<D, StepType = Step<D>>,
+    W: AsyncWrite + Unpin + Send + Sync,
 >(
     mut solver: Solver,
     user: UserType,
-    output: &mut Output,
+    mut datalogger: DataType,
 ) {
     let mut t = 0.0;
     let mut datapoints = Vec::new();
 
     loop {
-        let snapshot = &solver.get_object().snapshot;
+        let step = solver.step_forward();
+        {
+            let snapshot = &solver.get_object().snapshot;
+            datapoints.push(datalogger.new_datapoint(t, snapshot, &step, &user));
 
-        let applied = solver.get_applied();
-
-        datapoints.push(DataType::new_datapoint(t, snapshot, &applied, &user));
-
-        if DataType::should_end(t, snapshot, &applied, &datapoints, &user) {
-            break;
+            if datalogger.should_end(t, &snapshot, &step, &datapoints, &user) {
+                break;
+            }
         }
+
+        solver.get_object_mut().snapshot = step.new_state;
 
         t += solver.step_forward().time;
     }
 
-    DataType::write_data(&datapoints, output).await;
+    DataType::write_data(&datapoints, datalogger.get_output()).await;
 }

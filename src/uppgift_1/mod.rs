@@ -1,8 +1,8 @@
 use fysik3_simulering::{
-    data::Data,
+    data::DataLogger,
     forces::{air_resistance, gravity},
     simulation::run_simulation,
-    solver::EulerCromerSolver,
+    solver::{EulerCromerSolver, Step},
     AppliedDynamics, BodySnapshot, Float,
 };
 use lazy_static::lazy_static;
@@ -103,7 +103,7 @@ pub async fn uppgift_1() {
     [b, c, d, e, f, g].into_iter().for_each(|x| x.unwrap());
 }
 
-pub async fn uppgift1_run_simulation<W: AsyncWrite + Unpin + Send>(
+pub async fn uppgift1_run_simulation<W: AsyncWrite + Unpin + Send + Sync>(
     initial_snapshot: BodySnapshot<2>,
     air_resistance_params: AirResistanceParameters,
     dt: Float,
@@ -121,37 +121,49 @@ pub async fn uppgift1_run_simulation<W: AsyncWrite + Unpin + Send>(
         dt,
     );
 
-    struct Uppg1Data;
+    let datalogger = Uppg1Data { output };
 
-    impl Data<2, 4, AppliedDynamics<2>, ()> for Uppg1Data {
-        fn new_datapoint(
-            time: Float,
-            object: &BodySnapshot<2>,
-            _: &AppliedDynamics<2>,
-            _: &(),
-        ) -> [Float; 4] {
-            [
-                time,
-                object.position[0],
-                object.position[1],
-                object.velocity.magnitude(),
-            ]
-        }
+    run_simulation::<_, 2, 4, _, _, _>(solver, (), datalogger).await;
+}
 
-        fn column_names() -> [&'static str; 4] {
-            ["t (s)", "x (m)", "y (m)", "v (m/s)"]
-        }
+struct Uppg1Data<'a, W> {
+    output: &'a mut W,
+}
 
-        fn should_end(
-            _: Float,
-            object: &BodySnapshot<2>,
-            _: &AppliedDynamics<2>,
-            _: &[[Float; 4]],
-            _: &(),
-        ) -> bool {
-            object.position.y < 0.0
-        }
+impl<'a, W: AsyncWrite + Send + Sync + Unpin> DataLogger<2, 4, Step<2>, (), W>
+    for Uppg1Data<'a, W>
+{
+    fn new_datapoint(
+        &mut self,
+        time: Float,
+        object: &BodySnapshot<2>,
+        _: &Step<2>,
+        _: &(),
+    ) -> [Float; 4] {
+        [
+            time,
+            object.position[0],
+            object.position[1],
+            object.velocity.magnitude(),
+        ]
     }
 
-    run_simulation::<Uppg1Data, 2, 4, _, _, _>(solver, (), output).await;
+    fn column_names() -> [&'static str; 4] {
+        ["t (s)", "x (m)", "y (m)", "v (m/s)"]
+    }
+
+    fn should_end(
+        &mut self,
+        _: Float,
+        object: &BodySnapshot<2>,
+        _: &Step<2>,
+        _: &[[Float; 4]],
+        _: &(),
+    ) -> bool {
+        object.position.y < 0.0
+    }
+
+    fn get_output(&mut self) -> &mut W {
+        self.output
+    }
 }

@@ -1,6 +1,6 @@
 use nalgebra::SVector;
 
-use crate::{AppliedDynamics, Body, Float};
+use crate::{AppliedDynamics, Body, Float, StepChanges};
 
 use super::{PhysicsSystemSolver, SingleObjectPhysicsSystemSolver, Step};
 
@@ -16,21 +16,8 @@ impl<const D: usize> EulerSolver<D> {
 }
 
 impl<const D: usize> PhysicsSystemSolver for EulerSolver<D> {
-    type Applied = AppliedDynamics<D>;
-    fn step_forward(&mut self) -> Step<AppliedDynamics<D>> {
-        let applied = self.get_applied();
-
-        self.object.snapshot.position += self.object.snapshot.velocity * self.dt;
-        self.object.snapshot.velocity += applied.acceleration * self.dt;
-
-        self.object.snapshot.angular_velocity += applied.angular_acceleration * self.dt;
-
-        Step {
-            time: self.dt,
-            applied,
-        }
-    }
-    fn get_applied(&self) -> Self::Applied {
+    type StepType = Step<D>;
+    fn step_forward(&self) -> Self::StepType {
         let force: SVector<Float, D> = self
             .object
             .forces
@@ -47,11 +34,28 @@ impl<const D: usize> PhysicsSystemSolver for EulerSolver<D> {
         let acceleration = force / self.object.snapshot.mass;
         let angular_acceleration = torque / self.object.snapshot.moment_of_inertia;
 
-        AppliedDynamics {
+        let applied = AppliedDynamics {
             force,
             acceleration,
             torque,
             angular_acceleration,
+        };
+
+        let mut new_state = self.get_object().snapshot;
+
+        let delta_s = new_state.velocity * self.dt;
+        new_state.position += delta_s;
+
+        let delta_v = acceleration * self.dt;
+        new_state.velocity += delta_v;
+
+        new_state.angular_velocity += angular_acceleration * self.dt;
+
+        Self::StepType {
+            time: self.dt,
+            applied,
+            deltas: StepChanges { delta_s, delta_v },
+            new_state,
         }
     }
 }
@@ -59,5 +63,9 @@ impl<const D: usize> PhysicsSystemSolver for EulerSolver<D> {
 impl<const D: usize> SingleObjectPhysicsSystemSolver<D> for EulerSolver<D> {
     fn get_object(&self) -> &Body<D> {
         &self.object
+    }
+
+    fn get_object_mut(&mut self) -> &mut Body<D> {
+        &mut self.object
     }
 }
