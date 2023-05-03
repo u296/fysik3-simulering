@@ -26,7 +26,7 @@ pub async fn run_simulation<
             let snapshot = &solver.get_object().snapshot;
             datapoints.push(datalogger.new_datapoint(t, snapshot, &step, &user));
 
-            if datalogger.should_end(t, &snapshot, &step, &datapoints, &user) {
+            if datalogger.should_end(t, snapshot, &step, &datapoints, &user) {
                 break;
             }
         }

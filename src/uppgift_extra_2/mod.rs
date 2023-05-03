@@ -45,9 +45,7 @@ pub async fn uppgift_extra_2() {
 
     ensure_dir_exists("uppgifter/extra_2").await;
 
-    let mut output = File::create(&format!("uppgifter/extra_2/result.csv"))
-        .await
-        .unwrap();
+    let mut output = File::create("uppgifter/extra_2/result.csv").await.unwrap();
 
     uppgift_extra_2_run_simulation(
         init,
