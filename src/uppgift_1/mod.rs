@@ -3,7 +3,7 @@ use fysik3_simulering::{
     forces::{air_resistance, gravity},
     simulation::run_simulation,
     solver::{EulerCromerSolver, Step},
-    AppliedDynamics, BodySnapshot, Float,
+    BodySnapshot, Float,
 };
 use lazy_static::lazy_static;
 use nalgebra::vector;

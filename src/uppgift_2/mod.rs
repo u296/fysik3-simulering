@@ -3,7 +3,7 @@ use fysik3_simulering::{
     forces::{buoyancy, fluid_resistance, gravity},
     simulation::run_simulation,
     solver::{EulerCromerSolver, Step},
-    spawn_timed_task, AppliedDynamics, Body, BodySnapshot, Float,
+    spawn_timed_task, Body, BodySnapshot, Float,
 };
 use lazy_static::lazy_static;
 use nalgebra::vector;

@@ -3,7 +3,7 @@ use fysik3_simulering::{
     forces::{fluid_resistance, spring_force},
     simulation::run_simulation,
     solver::{SingleObjectPhysicsSystemSolver, Step},
-    spawn_timed_task, AppliedDynamics, Body, BodySnapshot, Float,
+    spawn_timed_task, Body, BodySnapshot, Float,
 };
 use nalgebra::vector;
 use prelude::*;

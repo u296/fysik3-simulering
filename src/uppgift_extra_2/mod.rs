@@ -5,7 +5,7 @@ use fysik3_simulering::{
     simulation::run_simulation,
     solver::{EulerCromerSolver, Step},
     torques::air_resistance_torque,
-    AppliedDynamics, Body, BodySnapshot, Float,
+    Body, BodySnapshot, Float,
 };
 use nalgebra::vector;
 use tokio::{fs::File, io::AsyncWrite};
@@ -81,16 +81,20 @@ pub async fn uppgift_extra_2_run_simulation<W: AsyncWrite + Unpin + Send + Sync>
         dt,
     );
 
-    let datalogger = UppgE2Data { output };
+    let datalogger = UppgE2Data {
+        output,
+        distance_xz: 0.0,
+    };
 
-    run_simulation::<_, 3, 10, _, _, _>(solver, (), datalogger).await;
+    run_simulation::<_, 3, 11, _, _, _>(solver, (), datalogger).await;
 }
 
 struct UppgE2Data<'a, W> {
     output: &'a mut W,
+    distance_xz: Float,
 }
 
-impl<'a, W: AsyncWrite + Send + Sync + Unpin> DataLogger<3, 10, Step<3>, (), W>
+impl<'a, W: AsyncWrite + Send + Sync + Unpin> DataLogger<3, 11, Step<3>, (), W>
     for UppgE2Data<'a, W>
 {
     fn new_datapoint(
@@ -99,17 +103,19 @@ impl<'a, W: AsyncWrite + Send + Sync + Unpin> DataLogger<3, 10, Step<3>, (), W>
         object: &BodySnapshot<3>,
         step: &Step<3>,
         _: &(),
-    ) -> [Float; 10] {
+    ) -> [Float; 11] {
         let kinetic = 0.5 * object.mass * object.velocity.magnitude_squared();
         let potential = object.mass * object.position[1] * 9.82;
 
         let energy = kinetic + potential;
+        self.distance_xz += step.deltas.delta_s.xz().magnitude();
 
         [
             time,
             object.position.x,
             object.position.y,
             object.position.z,
+            self.distance_xz,
             energy,
             object.velocity.x,
             object.velocity.y,
@@ -119,12 +125,13 @@ impl<'a, W: AsyncWrite + Send + Sync + Unpin> DataLogger<3, 10, Step<3>, (), W>
         ]
     }
 
-    fn column_names() -> [&'static str; 10] {
+    fn column_names() -> [&'static str; 11] {
         [
             "t (s)",
             "x (m)",
             "y (m)",
             "z (m)",
+            "xz (m)",
             "translationell mekanisk energi (J)",
             "vx (m/s)",
             "vy (m/s)",
@@ -139,7 +146,7 @@ impl<'a, W: AsyncWrite + Send + Sync + Unpin> DataLogger<3, 10, Step<3>, (), W>
         time: Float,
         object: &BodySnapshot<3>,
         _: &Step<3>,
-        _: &[[Float; 10]],
+        _: &[[Float; 11]],
         _: &(),
     ) -> bool {
         object.position.y < 0.0 || time > 10.0

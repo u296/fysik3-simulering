@@ -14,7 +14,7 @@ use fysik3_simulering::{
     data::DataLogger,
     forces::{fluid_resistance, spring_force},
     solver::{SingleObjectPhysicsSystemSolver, Step},
-    spawn_timed_task, AppliedDynamics, Body, Float,
+    spawn_timed_task, Body, Float,
 };
 use prelude::*;
 use tokio::{io::AsyncWrite, join};
