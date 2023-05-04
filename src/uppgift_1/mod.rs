@@ -22,6 +22,7 @@ mod prelude {
 }
 use prelude::*;
 
+mod del_a;
 mod del_b;
 mod del_c;
 mod del_d;
@@ -91,7 +92,8 @@ anger följande information om flygplanet:
 }
 
 pub async fn uppgift_1() {
-    let (b, c, d, e, f, g) = join!(
+    let (a, b, c, d, e, f, g) = join!(
+        spawn_timed_task("1-a", del_a::uppgift_a),
         spawn_timed_task("1-b", del_b::uppgift_b),
         spawn_timed_task("1-c", del_c::uppgift_c),
         spawn_timed_task("1-d", del_d::uppgift_d),
@@ -100,7 +102,7 @@ pub async fn uppgift_1() {
         spawn_timed_task("1-g", del_g::uppgift_g)
     );
 
-    [b, c, d, e, f, g].into_iter().for_each(|x| x.unwrap());
+    [a, b, c, d, e, f, g].into_iter().for_each(|x| x.unwrap());
 }
 
 pub async fn uppgift1_run_simulation<W: AsyncWrite + Unpin + Send + Sync>(
